@@ -455,8 +455,8 @@ ToolCall _$ToolCallFromJson(Map<String, dynamic> json) => ToolCall(
   locations: (json['locations'] as List<dynamic>?)
       ?.map((e) => ToolCallLocation.fromJson(e as Map<String, dynamic>))
       .toList(),
-  rawInput: json['rawInput'] as Map<String, dynamic>?,
-  rawOutput: json['rawOutput'] as Map<String, dynamic>?,
+  rawInput: json['rawInput'],
+  rawOutput: json['rawOutput'],
   status: $enumDecodeNullable(_$ToolCallStatusEnumMap, json['status']),
   title: json['title'] as String,
   toolCallId: json['toolCallId'] as String,
@@ -606,8 +606,8 @@ ToolCallUpdate _$ToolCallUpdateFromJson(Map<String, dynamic> json) =>
       locations: (json['locations'] as List<dynamic>?)
           ?.map((e) => ToolCallLocation.fromJson(e as Map<String, dynamic>))
           .toList(),
-      rawInput: json['rawInput'] as Map<String, dynamic>?,
-      rawOutput: json['rawOutput'] as Map<String, dynamic>?,
+      rawInput: json['rawInput'],
+      rawOutput: json['rawOutput'],
       status: $enumDecodeNullable(_$ToolCallStatusEnumMap, json['status']),
       title: json['title'] as String?,
       toolCallId: json['toolCallId'] as String,
@@ -1707,8 +1707,8 @@ ToolCallSessionUpdate _$ToolCallSessionUpdateFromJson(
   locations: (json['locations'] as List<dynamic>?)
       ?.map((e) => ToolCallLocation.fromJson(e as Map<String, dynamic>))
       .toList(),
-  rawInput: json['rawInput'] as Map<String, dynamic>?,
-  rawOutput: json['rawOutput'] as Map<String, dynamic>?,
+  rawInput: json['rawInput'],
+  rawOutput: json['rawOutput'],
   status: $enumDecodeNullable(_$ToolCallStatusEnumMap, json['status']),
   title: json['title'] as String,
   toolCallId: json['toolCallId'] as String,
@@ -1745,8 +1745,8 @@ ToolCallUpdateSessionUpdate _$ToolCallUpdateSessionUpdateFromJson(
   locations: (json['locations'] as List<dynamic>?)
       ?.map((e) => ToolCallLocation.fromJson(e as Map<String, dynamic>))
       .toList(),
-  rawInput: json['rawInput'] as Map<String, dynamic>?,
-  rawOutput: json['rawOutput'] as Map<String, dynamic>?,
+  rawInput: json['rawInput'],
+  rawOutput: json['rawOutput'],
   status: $enumDecodeNullable(_$ToolCallStatusEnumMap, json['status']),
   title: json['title'] as String?,
   toolCallId: json['toolCallId'] as String,

@@ -689,8 +689,8 @@ class ToolCall {
   final List<ToolCallContent>? content;
   final ToolKind? kind;
   final List<ToolCallLocation>? locations;
-  final Map<String, dynamic>? rawInput;
-  final Map<String, dynamic>? rawOutput;
+  final dynamic rawInput;
+  final dynamic rawOutput;
   final ToolCallStatus? status;
   final String title;
   final String toolCallId;
@@ -839,8 +839,8 @@ class ToolCallUpdate {
   final List<ToolCallContent>? content;
   final ToolKind? kind;
   final List<ToolCallLocation>? locations;
-  final Map<String, dynamic>? rawInput;
-  final Map<String, dynamic>? rawOutput;
+  final dynamic rawInput;
+  final dynamic rawOutput;
   final ToolCallStatus? status;
   final String? title;
   final String toolCallId;
@@ -2178,8 +2178,8 @@ class ToolCallSessionUpdate extends SessionUpdate {
   final List<ToolCallContent>? content;
   final ToolKind? kind;
   final List<ToolCallLocation>? locations;
-  final Map<String, dynamic>? rawInput;
-  final Map<String, dynamic>? rawOutput;
+  final dynamic rawInput;
+  final dynamic rawOutput;
   final ToolCallStatus? status;
   final String title;
   final String toolCallId;
@@ -2210,8 +2210,8 @@ class ToolCallUpdateSessionUpdate extends SessionUpdate {
   final List<ToolCallContent>? content;
   final ToolKind? kind;
   final List<ToolCallLocation>? locations;
-  final Map<String, dynamic>? rawInput;
-  final Map<String, dynamic>? rawOutput;
+  final dynamic rawInput;
+  final dynamic rawOutput;
   final ToolCallStatus? status;
   final String? title;
   final String toolCallId;
