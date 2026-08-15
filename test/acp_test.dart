@@ -1912,7 +1912,7 @@ class MockConnection implements Connection {
     Map<String, dynamic>? meta,
   }) {
     lastMethod = 'cancelPendingRequest';
-    lastParams = {'requestId': requestId, if (meta != null) '_meta': meta};
+    lastParams = {'requestId': requestId, '_meta': ?meta};
     return Future.value(false);
   }
 }

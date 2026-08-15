@@ -140,7 +140,7 @@ class Connection {
       'jsonrpc': '2.0',
       'id': id,
       'method': method,
-      if (params != null) 'params': params,
+      'params': ?params,
     });
     return completer.future;
   }
@@ -150,7 +150,7 @@ class Connection {
     return _sendMessage({
       'jsonrpc': '2.0',
       'method': method,
-      if (params != null) 'params': params,
+      'params': ?params,
     });
   }
 

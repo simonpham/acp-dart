@@ -40,6 +40,7 @@
 ///     break;
 /// }
 /// ```
+library;
 
 import 'package:collection/collection.dart';
 
