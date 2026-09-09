@@ -51,6 +51,19 @@ ClientCapabilities _$ClientCapabilitiesFromJson(Map<String, dynamic> json) =>
           ? null
           : FileSystemCapability.fromJson(json['fs'] as Map<String, dynamic>),
       terminal: json['terminal'] as bool? ?? false,
+      session: json['session'] == null
+          ? null
+          : ClientSessionCapabilities.fromJson(
+              json['session'] as Map<String, dynamic>,
+            ),
+      elicitation: json['elicitation'] == null
+          ? null
+          : ElicitationCapabilities.fromJson(
+              json['elicitation'] as Map<String, dynamic>,
+            ),
+      auth: json['auth'] == null
+          ? null
+          : AuthCapabilities.fromJson(json['auth'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$ClientCapabilitiesToJson(ClientCapabilities instance) =>
@@ -58,7 +71,64 @@ Map<String, dynamic> _$ClientCapabilitiesToJson(ClientCapabilities instance) =>
       '_meta': ?instance.meta,
       'fs': instance.fs,
       'terminal': instance.terminal,
+      'session': instance.session,
+      'elicitation': instance.elicitation,
+      'auth': instance.auth,
     };
+
+ClientSessionCapabilities _$ClientSessionCapabilitiesFromJson(
+  Map<String, dynamic> json,
+) => ClientSessionCapabilities(
+  meta: json['_meta'] as Map<String, dynamic>?,
+  configOptions: json['configOptions'] == null
+      ? null
+      : SessionConfigOptionsCapabilities.fromJson(
+          json['configOptions'] as Map<String, dynamic>,
+        ),
+);
+
+Map<String, dynamic> _$ClientSessionCapabilitiesToJson(
+  ClientSessionCapabilities instance,
+) => <String, dynamic>{
+  '_meta': ?instance.meta,
+  'configOptions': instance.configOptions,
+};
+
+SessionConfigOptionsCapabilities _$SessionConfigOptionsCapabilitiesFromJson(
+  Map<String, dynamic> json,
+) => SessionConfigOptionsCapabilities(
+  meta: json['_meta'] as Map<String, dynamic>?,
+  boolean: json['boolean'] as bool? ?? false,
+);
+
+Map<String, dynamic> _$SessionConfigOptionsCapabilitiesToJson(
+  SessionConfigOptionsCapabilities instance,
+) => <String, dynamic>{'_meta': ?instance.meta, 'boolean': instance.boolean};
+
+ElicitationCapabilities _$ElicitationCapabilitiesFromJson(
+  Map<String, dynamic> json,
+) => ElicitationCapabilities(
+  meta: json['_meta'] as Map<String, dynamic>?,
+  form: json['form'] as bool? ?? false,
+  url: json['url'] as bool? ?? false,
+);
+
+Map<String, dynamic> _$ElicitationCapabilitiesToJson(
+  ElicitationCapabilities instance,
+) => <String, dynamic>{
+  '_meta': ?instance.meta,
+  'form': instance.form,
+  'url': instance.url,
+};
+
+AuthCapabilities _$AuthCapabilitiesFromJson(Map<String, dynamic> json) =>
+    AuthCapabilities(
+      meta: json['_meta'] as Map<String, dynamic>?,
+      terminal: json['terminal'] as bool? ?? false,
+    );
+
+Map<String, dynamic> _$AuthCapabilitiesToJson(AuthCapabilities instance) =>
+    <String, dynamic>{'_meta': ?instance.meta, 'terminal': instance.terminal};
 
 FileSystemCapability _$FileSystemCapabilityFromJson(
   Map<String, dynamic> json,
@@ -322,6 +392,7 @@ PromptRequest _$PromptRequestFromJson(Map<String, dynamic> json) =>
             ),
           )
           .toList(),
+      clientUserMessageId: json['clientUserMessageId'] as String?,
     );
 
 Map<String, dynamic> _$PromptRequestToJson(
@@ -330,6 +401,7 @@ Map<String, dynamic> _$PromptRequestToJson(
   '_meta': ?instance.meta,
   'sessionId': instance.sessionId,
   'prompt': instance.prompt.map(const ContentBlockConverter().toJson).toList(),
+  'clientUserMessageId': ?instance.clientUserMessageId,
 };
 
 TextContentBlock _$TextContentBlockFromJson(Map<String, dynamic> json) =>
@@ -1861,3 +1933,133 @@ UnknownSessionUpdate _$UnknownSessionUpdateFromJson(
 Map<String, dynamic> _$UnknownSessionUpdateToJson(
   UnknownSessionUpdate instance,
 ) => <String, dynamic>{'rawJson': instance.rawJson};
+
+CloseSessionRequest _$CloseSessionRequestFromJson(Map<String, dynamic> json) =>
+    CloseSessionRequest(
+      meta: json['_meta'] as Map<String, dynamic>?,
+      sessionId: json['sessionId'] as String,
+    );
+
+Map<String, dynamic> _$CloseSessionRequestToJson(
+  CloseSessionRequest instance,
+) => <String, dynamic>{
+  '_meta': ?instance.meta,
+  'sessionId': instance.sessionId,
+};
+
+CloseSessionResponse _$CloseSessionResponseFromJson(
+  Map<String, dynamic> json,
+) => CloseSessionResponse(meta: json['_meta'] as Map<String, dynamic>?);
+
+Map<String, dynamic> _$CloseSessionResponseToJson(
+  CloseSessionResponse instance,
+) => <String, dynamic>{'_meta': ?instance.meta};
+
+CreateElicitationRequest _$CreateElicitationRequestFromJson(
+  Map<String, dynamic> json,
+) => CreateElicitationRequest(
+  meta: json['_meta'] as Map<String, dynamic>?,
+  elicitationId: json['elicitationId'] as String?,
+  scope: json['scope'] as String?,
+  sessionId: json['sessionId'] as String?,
+  requestId: json['requestId'],
+  title: json['title'] as String?,
+  description: json['description'] as String?,
+  mode: json['mode'] as String? ?? 'form',
+  schema: json['schema'] == null
+      ? null
+      : ElicitationSchema.fromJson(json['schema'] as Map<String, dynamic>),
+  url: json['url'] as String?,
+);
+
+Map<String, dynamic> _$CreateElicitationRequestToJson(
+  CreateElicitationRequest instance,
+) => <String, dynamic>{
+  '_meta': ?instance.meta,
+  'elicitationId': instance.elicitationId,
+  'scope': instance.scope,
+  'sessionId': instance.sessionId,
+  'requestId': instance.requestId,
+  'title': instance.title,
+  'description': instance.description,
+  'mode': instance.mode,
+  'schema': instance.schema,
+  'url': instance.url,
+};
+
+ElicitationSchema _$ElicitationSchemaFromJson(Map<String, dynamic> json) =>
+    ElicitationSchema(
+      type: json['type'] as String? ?? 'object',
+      properties:
+          (json['properties'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(
+              k,
+              ElicitationPropertySchema.fromJson(e as Map<String, dynamic>),
+            ),
+          ) ??
+          {},
+      required:
+          (json['required'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$ElicitationSchemaToJson(ElicitationSchema instance) =>
+    <String, dynamic>{
+      'type': instance.type,
+      'properties': instance.properties,
+      'required': instance.required,
+    };
+
+ElicitationPropertySchema _$ElicitationPropertySchemaFromJson(
+  Map<String, dynamic> json,
+) => ElicitationPropertySchema(
+  type: json['type'] as String,
+  title: json['title'] as String?,
+  description: json['description'] as String?,
+  defaultValue: json['default'],
+  enumValues: json['enum'] as List<dynamic>?,
+  items: json['items'] as Map<String, dynamic>?,
+);
+
+Map<String, dynamic> _$ElicitationPropertySchemaToJson(
+  ElicitationPropertySchema instance,
+) => <String, dynamic>{
+  'type': instance.type,
+  'title': instance.title,
+  'description': instance.description,
+  'default': instance.defaultValue,
+  'enum': instance.enumValues,
+  'items': instance.items,
+};
+
+CreateElicitationResponse _$CreateElicitationResponseFromJson(
+  Map<String, dynamic> json,
+) => CreateElicitationResponse(
+  meta: json['_meta'] as Map<String, dynamic>?,
+  action: json['action'] as String,
+  content: json['content'] as Map<String, dynamic>?,
+);
+
+Map<String, dynamic> _$CreateElicitationResponseToJson(
+  CreateElicitationResponse instance,
+) => <String, dynamic>{
+  '_meta': ?instance.meta,
+  'action': instance.action,
+  'content': instance.content,
+};
+
+CompleteElicitationNotification _$CompleteElicitationNotificationFromJson(
+  Map<String, dynamic> json,
+) => CompleteElicitationNotification(
+  meta: json['_meta'] as Map<String, dynamic>?,
+  elicitationId: json['elicitationId'] as String,
+);
+
+Map<String, dynamic> _$CompleteElicitationNotificationToJson(
+  CompleteElicitationNotification instance,
+) => <String, dynamic>{
+  '_meta': ?instance.meta,
+  'elicitationId': instance.elicitationId,
+};

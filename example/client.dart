@@ -137,6 +137,25 @@ class ExampleClient implements Client {
   }
 
   @override
+  Future<CreateElicitationResponse>? createElicitation(
+    CreateElicitationRequest params,
+  ) async {
+    stderr.writeln(
+      '[Client] Create elicitation called with: ${jsonEncode(params)}',
+    );
+    return CreateElicitationResponse(action: 'accept');
+  }
+
+  @override
+  Future<void>? completeElicitation(
+    CompleteElicitationNotification params,
+  ) async {
+    stderr.writeln(
+      '[Client] Complete elicitation called with: ${jsonEncode(params)}',
+    );
+  }
+
+  @override
   Future<Map<String, dynamic>>? extMethod(
     String method,
     Map<String, dynamic> params,

@@ -179,13 +179,90 @@ class ClientCapabilities {
   final FileSystemCapability? fs;
   @JsonKey(defaultValue: false)
   final bool terminal;
+  final ClientSessionCapabilities? session;
+  final ElicitationCapabilities? elicitation;
+  final AuthCapabilities? auth;
 
-  ClientCapabilities({this.meta, this.fs, this.terminal = false});
+  ClientCapabilities({
+    this.meta,
+    this.fs,
+    this.terminal = false,
+    this.session,
+    this.elicitation,
+    this.auth,
+  });
 
   factory ClientCapabilities.fromJson(Map<String, dynamic> json) =>
       _$ClientCapabilitiesFromJson(json);
 
   Map<String, dynamic> toJson() => _$ClientCapabilitiesToJson(this);
+}
+
+@JsonSerializable()
+class ClientSessionCapabilities {
+  @JsonKey(name: '_meta', includeIfNull: false)
+  final Map<String, dynamic>? meta;
+  final SessionConfigOptionsCapabilities? configOptions;
+
+  ClientSessionCapabilities({this.meta, this.configOptions});
+
+  factory ClientSessionCapabilities.fromJson(Map<String, dynamic> json) =>
+      _$ClientSessionCapabilitiesFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ClientSessionCapabilitiesToJson(this);
+}
+
+@JsonSerializable()
+class SessionConfigOptionsCapabilities {
+  @JsonKey(name: '_meta', includeIfNull: false)
+  final Map<String, dynamic>? meta;
+  @JsonKey(defaultValue: false)
+  final bool boolean;
+
+  SessionConfigOptionsCapabilities({this.meta, this.boolean = false});
+
+  factory SessionConfigOptionsCapabilities.fromJson(
+    Map<String, dynamic> json,
+  ) => _$SessionConfigOptionsCapabilitiesFromJson(json);
+
+  Map<String, dynamic> toJson() =>
+      _$SessionConfigOptionsCapabilitiesToJson(this);
+}
+
+@JsonSerializable()
+class ElicitationCapabilities {
+  @JsonKey(name: '_meta', includeIfNull: false)
+  final Map<String, dynamic>? meta;
+  @JsonKey(defaultValue: false)
+  final bool form;
+  @JsonKey(defaultValue: false)
+  final bool url;
+
+  ElicitationCapabilities({
+    this.meta,
+    this.form = false,
+    this.url = false,
+  });
+
+  factory ElicitationCapabilities.fromJson(Map<String, dynamic> json) =>
+      _$ElicitationCapabilitiesFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ElicitationCapabilitiesToJson(this);
+}
+
+@JsonSerializable()
+class AuthCapabilities {
+  @JsonKey(name: '_meta', includeIfNull: false)
+  final Map<String, dynamic>? meta;
+  @JsonKey(defaultValue: false)
+  final bool terminal;
+
+  AuthCapabilities({this.meta, this.terminal = false});
+
+  factory AuthCapabilities.fromJson(Map<String, dynamic> json) =>
+      _$AuthCapabilitiesFromJson(json);
+
+  Map<String, dynamic> toJson() => _$AuthCapabilitiesToJson(this);
 }
 
 @JsonSerializable()
@@ -476,6 +553,10 @@ class PromptRequest {
   @ContentBlockConverter()
   final List<ContentBlock> prompt;
 
+  /// Optional client-generated user message ID for tracking and deduplication
+  @JsonKey(name: 'clientUserMessageId', includeIfNull: false)
+  final String? clientUserMessageId;
+
   /// Request parameters for sending a user prompt to the agent.
   ///
   /// Contains the user's message and any additional context or tools.
@@ -483,7 +564,12 @@ class PromptRequest {
   /// stop reason and any generated content or tool calls.
   ///
   /// See protocol docs: [User Message](https://agentclientprotocol.com/protocol/prompt-turn#1-user-message)
-  PromptRequest({this.meta, required this.sessionId, required this.prompt});
+  PromptRequest({
+    this.meta,
+    required this.sessionId,
+    required this.prompt,
+    this.clientUserMessageId,
+  });
 
   factory PromptRequest.fromJson(Map<String, dynamic> json) =>
       _$PromptRequestFromJson(json);
@@ -2335,6 +2421,152 @@ class UnknownSessionUpdate extends SessionUpdate {
   Map<String, dynamic> toJson() => _$UnknownSessionUpdateToJson(this);
 }
 
+@JsonSerializable()
+class CloseSessionRequest {
+  @JsonKey(name: '_meta', includeIfNull: false)
+  final Map<String, dynamic>? meta;
+  final String sessionId;
+
+  CloseSessionRequest({this.meta, required this.sessionId});
+
+  factory CloseSessionRequest.fromJson(Map<String, dynamic> json) =>
+      _$CloseSessionRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CloseSessionRequestToJson(this);
+}
+
+@JsonSerializable()
+class CloseSessionResponse {
+  @JsonKey(name: '_meta', includeIfNull: false)
+  final Map<String, dynamic>? meta;
+
+  CloseSessionResponse({this.meta});
+
+  factory CloseSessionResponse.fromJson(Map<String, dynamic> json) =>
+      _$CloseSessionResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CloseSessionResponseToJson(this);
+}
+
+@JsonSerializable()
+class CreateElicitationRequest {
+  @JsonKey(name: '_meta', includeIfNull: false)
+  final Map<String, dynamic>? meta;
+  final String? elicitationId;
+  final String? scope;
+  final String? sessionId;
+  final RequestId? requestId;
+  final String? title;
+  final String? description;
+  @JsonKey(defaultValue: 'form')
+  final String mode;
+  final ElicitationSchema? schema;
+  final String? url;
+
+  CreateElicitationRequest({
+    this.meta,
+    this.elicitationId,
+    this.scope,
+    this.sessionId,
+    this.requestId,
+    this.title,
+    this.description,
+    this.mode = 'form',
+    this.schema,
+    this.url,
+  });
+
+  factory CreateElicitationRequest.fromJson(Map<String, dynamic> json) =>
+      _$CreateElicitationRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CreateElicitationRequestToJson(this);
+}
+
+@JsonSerializable()
+class ElicitationSchema {
+  @JsonKey(defaultValue: 'object')
+  final String type;
+  @JsonKey(defaultValue: {})
+  final Map<String, ElicitationPropertySchema> properties;
+  @JsonKey(defaultValue: [])
+  final List<String> required;
+
+  ElicitationSchema({
+    this.type = 'object',
+    this.properties = const {},
+    this.required = const [],
+  });
+
+  factory ElicitationSchema.fromJson(Map<String, dynamic> json) =>
+      _$ElicitationSchemaFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ElicitationSchemaToJson(this);
+}
+
+@JsonSerializable()
+class ElicitationPropertySchema {
+  final String type;
+  final String? title;
+  final String? description;
+  @JsonKey(name: 'default')
+  final dynamic defaultValue;
+  @JsonKey(name: 'enum')
+  final List<dynamic>? enumValues;
+  final Map<String, dynamic>? items;
+
+  ElicitationPropertySchema({
+    required this.type,
+    this.title,
+    this.description,
+    this.defaultValue,
+    this.enumValues,
+    this.items,
+  });
+
+  factory ElicitationPropertySchema.fromJson(Map<String, dynamic> json) =>
+      _$ElicitationPropertySchemaFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ElicitationPropertySchemaToJson(this);
+}
+
+@JsonSerializable()
+class CreateElicitationResponse {
+  @JsonKey(name: '_meta', includeIfNull: false)
+  final Map<String, dynamic>? meta;
+  final String action;
+  final Map<String, dynamic>? content;
+
+  CreateElicitationResponse({
+    this.meta,
+    required this.action,
+    this.content,
+  });
+
+  factory CreateElicitationResponse.fromJson(Map<String, dynamic> json) =>
+      _$CreateElicitationResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CreateElicitationResponseToJson(this);
+}
+
+@JsonSerializable()
+class CompleteElicitationNotification {
+  @JsonKey(name: '_meta', includeIfNull: false)
+  final Map<String, dynamic>? meta;
+  final String elicitationId;
+
+  CompleteElicitationNotification({
+    this.meta,
+    required this.elicitationId,
+  });
+
+  factory CompleteElicitationNotification.fromJson(
+    Map<String, dynamic> json,
+  ) => _$CompleteElicitationNotificationFromJson(json);
+
+  Map<String, dynamic> toJson() =>
+      _$CompleteElicitationNotificationToJson(this);
+}
+
 /// Protocol method constants for agent-side requests
 const agentMethods = {
   'authenticate': 'authenticate',
@@ -2344,6 +2576,7 @@ const agentMethods = {
   'sessionList': 'session/list',
   'sessionSetConfigOption': 'session/set_config_option',
   'sessionCancel': 'session/cancel',
+  'sessionClose': 'session/close',
   'sessionLoad': 'session/load',
   'sessionNew': 'session/new',
   'sessionPrompt': 'session/prompt',
@@ -2353,6 +2586,8 @@ const agentMethods = {
 
 /// Protocol method constants for client-side requests
 const clientMethods = {
+  'elicitationComplete': 'elicitation/complete',
+  'elicitationCreate': 'elicitation/create',
   'fsReadTextFile': 'fs/read_text_file',
   'fsWriteTextFile': 'fs/write_text_file',
   'sessionRequestPermission': 'session/request_permission',

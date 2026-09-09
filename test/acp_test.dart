@@ -833,6 +833,76 @@ void main() {
       },
     );
 
+    test('dispatches session/close request to Agent', () async {
+      final agent = ConfigurableMockAgent();
+      final _ = AgentSideConnection((conn) => agent, acpStream);
+
+      readableController.add({
+        'jsonrpc': '2.0',
+        'id': 107,
+        'method': 'session/close',
+        'params': {'sessionId': 's1'},
+      });
+
+      final response = await writableController.stream.first;
+      expect(response['id'], equals(107));
+      expect(agent.lastCloseSessionRequest, isNotNull);
+      expect(agent.lastCloseSessionRequest?.sessionId, equals('s1'));
+    });
+
+    test(
+      'createElicitation sends elicitation/create request and parses response',
+      () async {
+        final connection = AgentSideConnection(
+          (conn) => MockAgent(),
+          acpStream,
+        );
+
+        final future = connection.createElicitation(
+          CreateElicitationRequest(
+            sessionId: 's1',
+            description: 'Please choose an option',
+            schema: ElicitationSchema(type: 'object'),
+          ),
+        );
+
+        await Future.delayed(Duration.zero);
+        final sentMessage = await writableController.stream.first;
+        expect(sentMessage['method'], equals('elicitation/create'));
+        expect(sentMessage['params']['sessionId'], equals('s1'));
+
+        readableController.add({
+          'jsonrpc': '2.0',
+          'id': sentMessage['id'],
+          'result': {
+            'action': 'accept',
+            'content': {'confirmed': true},
+          },
+        });
+
+        final result = await future;
+        expect(result?.action, equals('accept'));
+        expect(result?.content, equals({'confirmed': true}));
+      },
+    );
+
+    test('completeElicitation sends elicitation/complete notification', () async {
+      final connection = AgentSideConnection(
+        (conn) => MockAgent(),
+        acpStream,
+      );
+
+      await connection.completeElicitation(
+        CompleteElicitationNotification(
+          elicitationId: 'el-1',
+        ),
+      );
+
+      final sentMessage = await writableController.stream.first;
+      expect(sentMessage['method'], equals('elicitation/complete'));
+      expect(sentMessage['params']['elicitationId'], equals('el-1'));
+    });
+
     test('dispatches protocol cancel notification to Agent', () async {
       final agent = ConfigurableMockAgent();
       final _ = AgentSideConnection((conn) => agent, acpStream);
@@ -1310,6 +1380,77 @@ void main() {
     );
 
     test(
+      'closeSession sends typed request and parses response',
+      () async {
+        final connection = ClientSideConnection(
+          (conn) => MockClient(),
+          acpStream,
+        );
+
+        final future = connection.closeSession(
+          CloseSessionRequest(sessionId: 'session-to-close'),
+        );
+
+        await Future.delayed(Duration.zero);
+        final sentMessage = await writableController.stream.first;
+        expect(sentMessage['method'], equals('session/close'));
+        expect(sentMessage['params'], {'sessionId': 'session-to-close'});
+
+        readableController.add({
+          'jsonrpc': '2.0',
+          'id': sentMessage['id'],
+          'result': <String, dynamic>{},
+        });
+
+        final response = await future;
+        expect(response, isA<CloseSessionResponse>());
+      },
+    );
+
+    test('dispatches elicitation/create request to Client', () async {
+      final client = ConfigurableMockClient();
+      final _ = ClientSideConnection((conn) => client, acpStream);
+
+      readableController.add({
+        'jsonrpc': '2.0',
+        'id': 201,
+        'method': 'elicitation/create',
+        'params': {
+          'sessionId': 's1',
+          'description': 'Confirm action',
+          'schema': {'type': 'object'},
+        },
+      });
+
+      final response = await writableController.stream.first;
+      expect(response['id'], equals(201));
+      expect(client.lastCreateElicitationRequest, isNotNull);
+      expect(client.lastCreateElicitationRequest?.sessionId, equals('s1'));
+      expect(response['result'], isA<CreateElicitationResponse>());
+      expect((response['result'] as CreateElicitationResponse).action, equals('accept'));
+    });
+
+    test('dispatches elicitation/complete notification to Client', () async {
+      final client = ConfigurableMockClient();
+      final _ = ClientSideConnection((conn) => client, acpStream);
+
+      readableController.add({
+        'jsonrpc': '2.0',
+        'method': 'elicitation/complete',
+        'params': {
+          'elicitationId': 'el-1',
+        },
+      });
+      await Future.delayed(Duration(milliseconds: 20));
+
+      expect(client.lastCompleteElicitationNotification, isNotNull);
+      expect(
+        client.lastCompleteElicitationNotification?.elicitationId,
+        equals('el-1'),
+      );
+    });
+
+    test(
       'sendCancelRequest sends protocol cancellation notification',
       () async {
         final connection = ClientSideConnection(
@@ -1594,6 +1735,16 @@ class MockAgent implements Agent {
   }
 
   @override
+  Future<ResumeSessionResponse>? resumeSession(ResumeSessionRequest params) {
+    return null;
+  }
+
+  @override
+  Future<CloseSessionResponse>? closeSession(CloseSessionRequest params) {
+    return null;
+  }
+
+  @override
   Future<SetSessionModeResponse?>? setSessionMode(
     SetSessionModeRequest params,
   ) async {
@@ -1696,6 +1847,24 @@ class ConfigurableMockAgent extends MockAgent
   }
 
   @override
+  Future<ResumeSessionResponse>? resumeSession(
+    ResumeSessionRequest params,
+  ) async {
+    lastResumeSessionRequest = params;
+    return ResumeSessionResponse();
+  }
+
+  CloseSessionRequest? lastCloseSessionRequest;
+
+  @override
+  Future<CloseSessionResponse>? closeSession(
+    CloseSessionRequest params,
+  ) async {
+    lastCloseSessionRequest = params;
+    return CloseSessionResponse();
+  }
+
+  @override
   Future<SetSessionConfigOptionResponse>? setSessionConfigOption(
     SetSessionConfigOptionRequest params,
   ) async {
@@ -1786,6 +1955,18 @@ class MockClient implements Client {
   }
 
   @override
+  Future<CreateElicitationResponse>? createElicitation(
+    CreateElicitationRequest params,
+  ) {
+    return null;
+  }
+
+  @override
+  Future<void>? completeElicitation(CompleteElicitationNotification params) {
+    return null;
+  }
+
+  @override
   Future<Map<String, dynamic>>? extMethod(
     String method,
     Map<String, dynamic> params,
@@ -1821,6 +2002,26 @@ class SessionUpdateTrackingClient extends MockClient {
 class ConfigurableMockClient extends MockClient
     implements ProtocolCancellationHandler {
   CancelRequestNotification? lastCancelRequestNotification;
+  CreateElicitationRequest? lastCreateElicitationRequest;
+  CompleteElicitationNotification? lastCompleteElicitationNotification;
+
+  @override
+  Future<CreateElicitationResponse>? createElicitation(
+    CreateElicitationRequest params,
+  ) async {
+    lastCreateElicitationRequest = params;
+    return CreateElicitationResponse(
+      action: 'accept',
+      content: {'confirmed': true},
+    );
+  }
+
+  @override
+  Future<void>? completeElicitation(
+    CompleteElicitationNotification params,
+  ) async {
+    lastCompleteElicitationNotification = params;
+  }
 
   @override
   Future<void> cancelRequest(CancelRequestNotification params) async {

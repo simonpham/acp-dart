@@ -65,12 +65,31 @@ abstract class AgentNotificationUnion {
   /// Automatically detects the notification type and returns the
   /// appropriate union variant. Unknown notifications are wrapped
   /// in [AgentExtensionNotification].
-  static AgentNotificationUnion fromJson(dynamic payload) {
+  static AgentNotificationUnion fromJson(dynamic payload, [String? method]) {
+    if (method == 'elicitation/complete' && payload is Map<String, dynamic>) {
+      return AgentCompleteElicitationNotification(
+        CompleteElicitationNotification.fromJson(payload),
+      );
+    }
     if (payload is Map<String, dynamic>) {
+      if (payload.containsKey('elicitationId')) {
+        return AgentCompleteElicitationNotification(
+          CompleteElicitationNotification.fromJson(payload),
+        );
+      }
       return SessionAgentNotification(SessionNotification.fromJson(payload));
     }
     return AgentExtensionNotification(payload);
   }
+}
+
+class AgentCompleteElicitationNotification extends AgentNotificationUnion {
+  final CompleteElicitationNotification notification;
+
+  const AgentCompleteElicitationNotification(this.notification);
+
+  @override
+  Map<String, dynamic> toJson() => notification.toJson();
 }
 
 class SessionAgentNotification extends AgentNotificationUnion {
@@ -167,10 +186,23 @@ abstract class AgentRequestUnion {
         return AgentKillTerminalRequest(
           KillTerminalCommandRequest.fromJson(params as Map<String, dynamic>),
         );
+      case 'elicitation/create':
+        return AgentCreateElicitationRequest(
+          CreateElicitationRequest.fromJson(params as Map<String, dynamic>),
+        );
       default:
         return AgentExtensionMethodRequest(method, params);
     }
   }
+}
+
+class AgentCreateElicitationRequest extends AgentRequestUnion {
+  final CreateElicitationRequest params;
+  const AgentCreateElicitationRequest(this.params);
+  @override
+  String get method => clientMethods['elicitationCreate']!;
+  @override
+  dynamic toJson() => params.toJson();
 }
 
 class AgentWriteTextFileRequest extends AgentRequestUnion {
@@ -499,6 +531,10 @@ abstract class ClientRequestUnion {
         return ClientResumeSessionRequest(
           ResumeSessionRequest.fromJson(params as Map<String, dynamic>),
         );
+      case 'session/close':
+        return ClientCloseSessionRequest(
+          CloseSessionRequest.fromJson(params as Map<String, dynamic>),
+        );
       case 'session/set_mode':
         return ClientSetSessionModeRequest(
           SetSessionModeRequest.fromJson(params as Map<String, dynamic>),
@@ -521,6 +557,15 @@ abstract class ClientRequestUnion {
         return ClientExtensionMethodRequest(method, params);
     }
   }
+}
+
+class ClientCloseSessionRequest extends ClientRequestUnion {
+  final CloseSessionRequest params;
+  const ClientCloseSessionRequest(this.params);
+  @override
+  String get method => agentMethods['sessionClose']!;
+  @override
+  dynamic toJson() => params.toJson();
 }
 
 class ClientInitializeRequest extends ClientRequestUnion {

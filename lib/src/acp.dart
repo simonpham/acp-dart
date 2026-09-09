@@ -395,6 +395,16 @@ abstract class Client {
     KillTerminalCommandRequest params,
   );
 
+  /// Requests form-based input, choices, or URL authorization from the user.
+  Future<CreateElicitationResponse>? createElicitation(
+    CreateElicitationRequest params,
+  ) => null;
+
+  /// Handles an elicitation completion notification from the agent.
+  Future<void>? completeElicitation(
+    CompleteElicitationNotification params,
+  ) => null;
+
   /// Extension method
   ///
   /// Allows the Agent to send an arbitrary request that is not part of the ACP spec.
@@ -489,6 +499,13 @@ class AgentSideConnection implements Client {
             params,
             ResumeSessionRequest.fromJson,
             agent.unstableResumeSession,
+          );
+        case 'session/close':
+          return handleOptionalRequest(
+            method,
+            params,
+            CloseSessionRequest.fromJson,
+            agent.closeSession,
           );
         case 'session/set_mode':
           final validatedParams = SetSessionModeRequest.fromJson(
@@ -663,6 +680,27 @@ class AgentSideConnection implements Client {
   }
 
   @override
+  Future<CreateElicitationResponse>? createElicitation(
+    CreateElicitationRequest params,
+  ) async {
+    final result = await _connection.sendRequest(
+      clientMethods['elicitationCreate']!,
+      params.toJson(),
+    );
+    return CreateElicitationResponse.fromJson(result as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void>? completeElicitation(
+    CompleteElicitationNotification params,
+  ) async {
+    return _connection.sendNotification(
+      clientMethods['elicitationComplete']!,
+      params.toJson(),
+    );
+  }
+
+  @override
   Future<Map<String, dynamic>>? extMethod(
     String method,
     Map<String, dynamic> params,
@@ -772,6 +810,15 @@ class ClientSideConnection implements Agent {
           );
           final result = await client.killTerminal(validatedParams);
           return result ?? {};
+        case 'elicitation/create':
+          final validatedParams = CreateElicitationRequest.fromJson(
+            params as Map<String, dynamic>,
+          );
+          final result = await client.createElicitation(validatedParams);
+          if (result == null) {
+            throw RequestError.methodNotFound(method);
+          }
+          return result;
         default:
           if (method.startsWith('_')) {
             final result = await client.extMethod(
@@ -794,6 +841,15 @@ class ClientSideConnection implements Agent {
             params as Map<String, dynamic>,
           );
           return client.sessionUpdate(validatedParams);
+        case 'elicitation/complete':
+          final validatedParams = CompleteElicitationNotification.fromJson(
+            params as Map<String, dynamic>,
+          );
+          final result = client.completeElicitation(validatedParams);
+          if (result != null) {
+            await result;
+          }
+          return;
         case r'$/cancel_request':
           final validatedParams = CancelRequestNotification.fromJson(
             params as Map<String, dynamic>,
@@ -889,6 +945,22 @@ class ClientSideConnection implements Agent {
       agentMethods['sessionResume']!,
       params.toJson(),
       ResumeSessionResponse.fromJson,
+    );
+  }
+
+  @override
+  Future<ResumeSessionResponse> resumeSession(
+    ResumeSessionRequest params,
+  ) => unstableResumeSession(params);
+
+  @override
+  Future<CloseSessionResponse> closeSession(
+    CloseSessionRequest params,
+  ) async {
+    return _sendTypedRequest(
+      agentMethods['sessionClose']!,
+      params.toJson(),
+      CloseSessionResponse.fromJson,
     );
   }
 
@@ -1039,6 +1111,16 @@ abstract class Agent {
   /// **UNSTABLE:** This capability is not part of the spec yet, and may be removed or changed at any point.
   Future<ResumeSessionResponse>? unstableResumeSession(
     ResumeSessionRequest params,
+  ) => null;
+
+  /// Resumes an existing session without replaying previous messages.
+  Future<ResumeSessionResponse>? resumeSession(
+    ResumeSessionRequest params,
+  ) => unstableResumeSession(params);
+
+  /// Closes an existing session to allow the agent to free session memory.
+  Future<CloseSessionResponse>? closeSession(
+    CloseSessionRequest params,
   ) => null;
 
   /// Sets the operational mode for a session.

@@ -80,6 +80,36 @@ class ExampleAgent implements Agent {
   }
 
   @override
+  Future<ListSessionsResponse>? unstableListSessions(
+    ListSessionsRequest params,
+  ) {
+    return null;
+  }
+
+  @override
+  Future<ForkSessionResponse>? unstableForkSession(ForkSessionRequest params) {
+    return null;
+  }
+
+  @override
+  Future<ResumeSessionResponse>? unstableResumeSession(
+    ResumeSessionRequest params,
+  ) {
+    return null;
+  }
+
+  @override
+  Future<ResumeSessionResponse>? resumeSession(ResumeSessionRequest params) {
+    return null;
+  }
+
+  @override
+  Future<CloseSessionResponse>? closeSession(CloseSessionRequest params) async {
+    _sessions.remove(params.sessionId);
+    return CloseSessionResponse();
+  }
+
+  @override
   Future<AuthenticateResponse?>? authenticate(
     AuthenticateRequest params,
   ) async {
