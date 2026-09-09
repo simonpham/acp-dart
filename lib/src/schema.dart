@@ -2010,6 +2010,9 @@ class ContentToolCallContent extends ToolCallContent {
       _$ContentToolCallContentFromJson(json);
 
   Map<String, dynamic> toJson() => _$ContentToolCallContentToJson(this);
+
+  @override
+  String toString() => 'ContentToolCallContent(content: $content)';
 }
 
 @JsonSerializable()
@@ -2033,6 +2036,9 @@ class DiffToolCallContent extends ToolCallContent {
       _$DiffToolCallContentFromJson(json);
 
   Map<String, dynamic> toJson() => _$DiffToolCallContentToJson(this);
+
+  @override
+  String toString() => 'DiffToolCallContent(path: $path)';
 }
 
 @JsonSerializable()
@@ -2049,6 +2055,9 @@ class TerminalToolCallContent extends ToolCallContent {
       _$TerminalToolCallContentFromJson(json);
 
   Map<String, dynamic> toJson() => _$TerminalToolCallContentToJson(this);
+
+  @override
+  String toString() => 'TerminalToolCallContent(terminalId: $terminalId)';
 }
 
 /// A file location being accessed or modified by a tool.
