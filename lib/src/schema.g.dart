@@ -1725,6 +1725,8 @@ Map<String, dynamic> _$SessionNotificationToJson(
 UserMessageChunkSessionUpdate _$UserMessageChunkSessionUpdateFromJson(
   Map<String, dynamic> json,
 ) => UserMessageChunkSessionUpdate(
+  meta: json['_meta'] as Map<String, dynamic>?,
+  messageId: json['messageId'] as String?,
   content: const ContentBlockConverter().fromJson(
     json['content'] as Map<String, dynamic>,
   ),
@@ -1733,12 +1735,16 @@ UserMessageChunkSessionUpdate _$UserMessageChunkSessionUpdateFromJson(
 Map<String, dynamic> _$UserMessageChunkSessionUpdateToJson(
   UserMessageChunkSessionUpdate instance,
 ) => <String, dynamic>{
+  '_meta': ?instance.meta,
+  'messageId': instance.messageId,
   'content': const ContentBlockConverter().toJson(instance.content),
 };
 
 AgentMessageChunkSessionUpdate _$AgentMessageChunkSessionUpdateFromJson(
   Map<String, dynamic> json,
 ) => AgentMessageChunkSessionUpdate(
+  meta: json['_meta'] as Map<String, dynamic>?,
+  messageId: json['messageId'] as String?,
   content: const ContentBlockConverter().fromJson(
     json['content'] as Map<String, dynamic>,
   ),
@@ -1747,12 +1753,16 @@ AgentMessageChunkSessionUpdate _$AgentMessageChunkSessionUpdateFromJson(
 Map<String, dynamic> _$AgentMessageChunkSessionUpdateToJson(
   AgentMessageChunkSessionUpdate instance,
 ) => <String, dynamic>{
+  '_meta': ?instance.meta,
+  'messageId': instance.messageId,
   'content': const ContentBlockConverter().toJson(instance.content),
 };
 
 AgentThoughtChunkSessionUpdate _$AgentThoughtChunkSessionUpdateFromJson(
   Map<String, dynamic> json,
 ) => AgentThoughtChunkSessionUpdate(
+  meta: json['_meta'] as Map<String, dynamic>?,
+  messageId: json['messageId'] as String?,
   content: const ContentBlockConverter().fromJson(
     json['content'] as Map<String, dynamic>,
   ),
@@ -1761,6 +1771,8 @@ AgentThoughtChunkSessionUpdate _$AgentThoughtChunkSessionUpdateFromJson(
 Map<String, dynamic> _$AgentThoughtChunkSessionUpdateToJson(
   AgentThoughtChunkSessionUpdate instance,
 ) => <String, dynamic>{
+  '_meta': ?instance.meta,
+  'messageId': instance.messageId,
   'content': const ContentBlockConverter().toJson(instance.content),
 };
 

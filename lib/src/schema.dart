@@ -585,6 +585,20 @@ class PromptRequest {
 /// See protocol docs: [Content](https://agentclientprotocol.com/protocol/content)
 abstract class ContentBlock {}
 
+class UnknownContentBlock extends ContentBlock {
+  final Map<String, dynamic> rawJson;
+
+  UnknownContentBlock({required this.rawJson});
+
+  factory UnknownContentBlock.fromJson(Map<String, dynamic> json) =>
+      UnknownContentBlock(rawJson: json);
+
+  Map<String, dynamic> toJson() => rawJson;
+
+  @override
+  String toString() => 'UnknownContentBlock(rawJson: $rawJson)';
+}
+
 @JsonSerializable()
 class TextContentBlock extends ContentBlock {
   @JsonKey(name: '_meta', includeIfNull: false)
@@ -2226,10 +2240,17 @@ class SessionNotification {
 
 @JsonSerializable()
 class UserMessageChunkSessionUpdate extends SessionUpdate {
+  @JsonKey(name: '_meta', includeIfNull: false)
+  final Map<String, dynamic>? meta;
+  final String? messageId;
   @ContentBlockConverter()
   final ContentBlock content;
 
-  UserMessageChunkSessionUpdate({required this.content});
+  UserMessageChunkSessionUpdate({
+    this.meta,
+    this.messageId,
+    required this.content,
+  });
 
   factory UserMessageChunkSessionUpdate.fromJson(Map<String, dynamic> json) =>
       _$UserMessageChunkSessionUpdateFromJson(json);
@@ -2239,10 +2260,17 @@ class UserMessageChunkSessionUpdate extends SessionUpdate {
 
 @JsonSerializable()
 class AgentMessageChunkSessionUpdate extends SessionUpdate {
+  @JsonKey(name: '_meta', includeIfNull: false)
+  final Map<String, dynamic>? meta;
+  final String? messageId;
   @ContentBlockConverter()
   final ContentBlock content;
 
-  AgentMessageChunkSessionUpdate({required this.content});
+  AgentMessageChunkSessionUpdate({
+    this.meta,
+    this.messageId,
+    required this.content,
+  });
 
   factory AgentMessageChunkSessionUpdate.fromJson(Map<String, dynamic> json) =>
       _$AgentMessageChunkSessionUpdateFromJson(json);
@@ -2252,10 +2280,17 @@ class AgentMessageChunkSessionUpdate extends SessionUpdate {
 
 @JsonSerializable()
 class AgentThoughtChunkSessionUpdate extends SessionUpdate {
+  @JsonKey(name: '_meta', includeIfNull: false)
+  final Map<String, dynamic>? meta;
+  final String? messageId;
   @ContentBlockConverter()
   final ContentBlock content;
 
-  AgentThoughtChunkSessionUpdate({required this.content});
+  AgentThoughtChunkSessionUpdate({
+    this.meta,
+    this.messageId,
+    required this.content,
+  });
 
   factory AgentThoughtChunkSessionUpdate.fromJson(Map<String, dynamic> json) =>
       _$AgentThoughtChunkSessionUpdateFromJson(json);

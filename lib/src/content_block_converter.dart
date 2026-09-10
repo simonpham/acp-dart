@@ -21,7 +21,10 @@ class ContentBlockConverter
       case 'resource':
         return ResourceContentBlock.fromJson(json);
       default:
-        throw Exception('Unknown ContentBlock type: $type');
+        if (json['text'] is String) {
+          return TextContentBlock.fromJson(json);
+        }
+        return UnknownContentBlock(rawJson: json);
     }
   }
 
@@ -37,8 +40,10 @@ class ContentBlockConverter
       return object.toJson();
     } else if (object is ResourceContentBlock) {
       return object.toJson();
+    } else if (object is UnknownContentBlock) {
+      return object.toJson();
     } else {
-      throw Exception('Unknown ContentBlock type: ${object.runtimeType}');
+      return {'type': 'unknown'};
     }
   }
 }
