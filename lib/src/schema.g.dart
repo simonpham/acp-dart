@@ -94,32 +94,31 @@ Map<String, dynamic> _$ClientSessionCapabilitiesToJson(
   'configOptions': instance.configOptions,
 };
 
-SessionConfigOptionsCapabilities _$SessionConfigOptionsCapabilitiesFromJson(
+BooleanConfigOptionCapabilities _$BooleanConfigOptionCapabilitiesFromJson(
   Map<String, dynamic> json,
-) => SessionConfigOptionsCapabilities(
+) => BooleanConfigOptionCapabilities(
   meta: json['_meta'] as Map<String, dynamic>?,
-  boolean: json['boolean'] as bool? ?? false,
 );
 
-Map<String, dynamic> _$SessionConfigOptionsCapabilitiesToJson(
-  SessionConfigOptionsCapabilities instance,
-) => <String, dynamic>{'_meta': ?instance.meta, 'boolean': instance.boolean};
+Map<String, dynamic> _$BooleanConfigOptionCapabilitiesToJson(
+  BooleanConfigOptionCapabilities instance,
+) => <String, dynamic>{'_meta': ?instance.meta};
 
-ElicitationCapabilities _$ElicitationCapabilitiesFromJson(
+ElicitationFormCapabilities _$ElicitationFormCapabilitiesFromJson(
   Map<String, dynamic> json,
-) => ElicitationCapabilities(
-  meta: json['_meta'] as Map<String, dynamic>?,
-  form: json['form'] as bool? ?? false,
-  url: json['url'] as bool? ?? false,
-);
+) => ElicitationFormCapabilities(meta: json['_meta'] as Map<String, dynamic>?);
 
-Map<String, dynamic> _$ElicitationCapabilitiesToJson(
-  ElicitationCapabilities instance,
-) => <String, dynamic>{
-  '_meta': ?instance.meta,
-  'form': instance.form,
-  'url': instance.url,
-};
+Map<String, dynamic> _$ElicitationFormCapabilitiesToJson(
+  ElicitationFormCapabilities instance,
+) => <String, dynamic>{'_meta': ?instance.meta};
+
+ElicitationUrlCapabilities _$ElicitationUrlCapabilitiesFromJson(
+  Map<String, dynamic> json,
+) => ElicitationUrlCapabilities(meta: json['_meta'] as Map<String, dynamic>?);
+
+Map<String, dynamic> _$ElicitationUrlCapabilitiesToJson(
+  ElicitationUrlCapabilities instance,
+) => <String, dynamic>{'_meta': ?instance.meta};
 
 AuthCapabilities _$AuthCapabilitiesFromJson(Map<String, dynamic> json) =>
     AuthCapabilities(

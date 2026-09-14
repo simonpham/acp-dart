@@ -213,41 +213,126 @@ class ClientSessionCapabilities {
 }
 
 @JsonSerializable()
-class SessionConfigOptionsCapabilities {
+class BooleanConfigOptionCapabilities {
   @JsonKey(name: '_meta', includeIfNull: false)
   final Map<String, dynamic>? meta;
-  @JsonKey(defaultValue: false)
-  final bool boolean;
 
-  SessionConfigOptionsCapabilities({this.meta, this.boolean = false});
+  BooleanConfigOptionCapabilities({this.meta});
 
-  factory SessionConfigOptionsCapabilities.fromJson(
-    Map<String, dynamic> json,
-  ) => _$SessionConfigOptionsCapabilitiesFromJson(json);
+  factory BooleanConfigOptionCapabilities.fromJson(Map<String, dynamic> json) =>
+      _$BooleanConfigOptionCapabilitiesFromJson(json);
 
   Map<String, dynamic> toJson() =>
-      _$SessionConfigOptionsCapabilitiesToJson(this);
+      _$BooleanConfigOptionCapabilitiesToJson(this);
 }
 
 @JsonSerializable()
-class ElicitationCapabilities {
+class ElicitationFormCapabilities {
   @JsonKey(name: '_meta', includeIfNull: false)
   final Map<String, dynamic>? meta;
-  @JsonKey(defaultValue: false)
-  final bool form;
-  @JsonKey(defaultValue: false)
-  final bool url;
 
-  ElicitationCapabilities({
-    this.meta,
-    this.form = false,
-    this.url = false,
-  });
+  ElicitationFormCapabilities({this.meta});
 
-  factory ElicitationCapabilities.fromJson(Map<String, dynamic> json) =>
-      _$ElicitationCapabilitiesFromJson(json);
+  factory ElicitationFormCapabilities.fromJson(Map<String, dynamic> json) =>
+      _$ElicitationFormCapabilitiesFromJson(json);
 
-  Map<String, dynamic> toJson() => _$ElicitationCapabilitiesToJson(this);
+  Map<String, dynamic> toJson() => _$ElicitationFormCapabilitiesToJson(this);
+}
+
+@JsonSerializable()
+class ElicitationUrlCapabilities {
+  @JsonKey(name: '_meta', includeIfNull: false)
+  final Map<String, dynamic>? meta;
+
+  ElicitationUrlCapabilities({this.meta});
+
+  factory ElicitationUrlCapabilities.fromJson(Map<String, dynamic> json) =>
+      _$ElicitationUrlCapabilitiesFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ElicitationUrlCapabilitiesToJson(this);
+}
+
+class SessionConfigOptionsCapabilities {
+  final Map<String, dynamic>? meta;
+  final BooleanConfigOptionCapabilities? boolean;
+
+  SessionConfigOptionsCapabilities({this.meta, this.boolean});
+
+  factory SessionConfigOptionsCapabilities.fromJson(Map<String, dynamic> json) {
+    final rawBoolean = json['boolean'];
+    final BooleanConfigOptionCapabilities? boolean = switch (rawBoolean) {
+      final Map<String, dynamic> m => BooleanConfigOptionCapabilities.fromJson(
+        m,
+      ),
+      true => BooleanConfigOptionCapabilities(),
+      _ => null,
+    };
+    final rawMeta = json['_meta'];
+    final Map<String, dynamic>? meta = switch (rawMeta) {
+      final Map<String, dynamic> m => Map<String, dynamic>.from(m),
+      _ => null,
+    };
+    return SessionConfigOptionsCapabilities(meta: meta, boolean: boolean);
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
+    final m = meta;
+    if (m != null) {
+      map['_meta'] = m;
+    }
+    final b = boolean;
+    if (b != null) {
+      map['boolean'] = b.toJson();
+    }
+    return map;
+  }
+}
+
+class ElicitationCapabilities {
+  final Map<String, dynamic>? meta;
+  final ElicitationFormCapabilities? form;
+  final ElicitationUrlCapabilities? url;
+
+  ElicitationCapabilities({this.meta, this.form, this.url});
+
+  factory ElicitationCapabilities.fromJson(Map<String, dynamic> json) {
+    final rawForm = json['form'];
+    final ElicitationFormCapabilities? form = switch (rawForm) {
+      final Map<String, dynamic> m => ElicitationFormCapabilities.fromJson(m),
+      true => ElicitationFormCapabilities(),
+      _ => null,
+    };
+    final rawUrl = json['url'];
+    final ElicitationUrlCapabilities? url = switch (rawUrl) {
+      final Map<String, dynamic> m => ElicitationUrlCapabilities.fromJson(m),
+      true => ElicitationUrlCapabilities(),
+      _ => null,
+    };
+    final rawMeta = json['_meta'];
+    final Map<String, dynamic>? meta = switch (rawMeta) {
+      final Map<String, dynamic> m => Map<String, dynamic>.from(m),
+      _ => null,
+    };
+    return ElicitationCapabilities(meta: meta, form: form, url: url);
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
+    final m = meta;
+    if (m != null) {
+      map['_meta'] = m;
+    }
+    final f = form;
+    if (f != null) {
+      map['form'] = f.toJson();
+    }
+    final u = url;
+    if (u != null) {
+      map['url'] = u.toJson();
+    }
+    return map;
+  }
 }
 
 @JsonSerializable()
@@ -2580,11 +2665,7 @@ class CreateElicitationResponse {
   final String action;
   final Map<String, dynamic>? content;
 
-  CreateElicitationResponse({
-    this.meta,
-    required this.action,
-    this.content,
-  });
+  CreateElicitationResponse({this.meta, required this.action, this.content});
 
   factory CreateElicitationResponse.fromJson(Map<String, dynamic> json) =>
       _$CreateElicitationResponseFromJson(json);
@@ -2598,14 +2679,10 @@ class CompleteElicitationNotification {
   final Map<String, dynamic>? meta;
   final String elicitationId;
 
-  CompleteElicitationNotification({
-    this.meta,
-    required this.elicitationId,
-  });
+  CompleteElicitationNotification({this.meta, required this.elicitationId});
 
-  factory CompleteElicitationNotification.fromJson(
-    Map<String, dynamic> json,
-  ) => _$CompleteElicitationNotificationFromJson(json);
+  factory CompleteElicitationNotification.fromJson(Map<String, dynamic> json) =>
+      _$CompleteElicitationNotificationFromJson(json);
 
   Map<String, dynamic> toJson() =>
       _$CompleteElicitationNotificationToJson(this);

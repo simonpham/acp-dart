@@ -613,5 +613,84 @@ void main() {
     test('protocol method constants include cancel request', () {
       expect(protocolMethods['cancelRequest'], equals(r'$/cancel_request'));
     });
+
+    test(
+      'SessionConfigOptionsCapabilities and ElicitationCapabilities serialize as objects and support legacy booleans',
+      () {
+        final elicitation = ElicitationCapabilities(
+          form: ElicitationFormCapabilities(),
+          url: ElicitationUrlCapabilities(),
+        );
+        final elicitationJson = elicitation.toJson();
+        expect(elicitationJson['form'], equals(<String, dynamic>{}));
+        expect(elicitationJson['url'], equals(<String, dynamic>{}));
+
+        final fromObjects = ElicitationCapabilities.fromJson({
+          'form': <String, dynamic>{},
+          'url': <String, dynamic>{},
+        });
+        expect(fromObjects.form, isA<ElicitationFormCapabilities>());
+        expect(fromObjects.url, isA<ElicitationUrlCapabilities>());
+
+        final fromBooleans = ElicitationCapabilities.fromJson({
+          'form': true,
+          'url': true,
+        });
+        expect(fromBooleans.form, isA<ElicitationFormCapabilities>());
+        expect(fromBooleans.url, isA<ElicitationUrlCapabilities>());
+
+        final emptyElicitation = ElicitationCapabilities.fromJson({});
+        expect(emptyElicitation.form, isNull);
+        expect(emptyElicitation.url, isNull);
+
+        final configOptions = SessionConfigOptionsCapabilities(
+          boolean: BooleanConfigOptionCapabilities(),
+        );
+        final configJson = configOptions.toJson();
+        expect(configJson['boolean'], equals(<String, dynamic>{}));
+
+        final fromObjectConfig = SessionConfigOptionsCapabilities.fromJson({
+          'boolean': <String, dynamic>{},
+        });
+        expect(
+          fromObjectConfig.boolean,
+          isA<BooleanConfigOptionCapabilities>(),
+        );
+
+        final fromBoolConfig = SessionConfigOptionsCapabilities.fromJson({
+          'boolean': true,
+        });
+        expect(fromBoolConfig.boolean, isA<BooleanConfigOptionCapabilities>());
+
+        final emptyConfig = SessionConfigOptionsCapabilities.fromJson({});
+        expect(emptyConfig.boolean, isNull);
+
+        final clientCaps = ClientCapabilities(
+          fs: FileSystemCapability(readTextFile: true, writeTextFile: true),
+          terminal: true,
+          auth: AuthCapabilities(terminal: true),
+          session: ClientSessionCapabilities(
+            configOptions: SessionConfigOptionsCapabilities(
+              boolean: BooleanConfigOptionCapabilities(),
+            ),
+          ),
+          elicitation: ElicitationCapabilities(
+            form: ElicitationFormCapabilities(),
+            url: ElicitationUrlCapabilities(),
+          ),
+        );
+        final clientCapsJson =
+            jsonDecode(jsonEncode(clientCaps.toJson())) as Map<String, dynamic>;
+        final sessionMap = clientCapsJson['session'] as Map<String, dynamic>;
+        final configOptionsMap =
+            sessionMap['configOptions'] as Map<String, dynamic>;
+        expect(configOptionsMap['boolean'], equals(<String, dynamic>{}));
+
+        final elicitationMap =
+            clientCapsJson['elicitation'] as Map<String, dynamic>;
+        expect(elicitationMap['form'], equals(<String, dynamic>{}));
+        expect(elicitationMap['url'], equals(<String, dynamic>{}));
+      },
+    );
   });
 }
