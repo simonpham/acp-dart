@@ -401,9 +401,8 @@ abstract class Client {
   ) => null;
 
   /// Handles an elicitation completion notification from the agent.
-  Future<void>? completeElicitation(
-    CompleteElicitationNotification params,
-  ) => null;
+  Future<void>? completeElicitation(CompleteElicitationNotification params) =>
+      null;
 
   /// Extension method
   ///
@@ -949,14 +948,11 @@ class ClientSideConnection implements Agent {
   }
 
   @override
-  Future<ResumeSessionResponse> resumeSession(
-    ResumeSessionRequest params,
-  ) => unstableResumeSession(params);
+  Future<ResumeSessionResponse> resumeSession(ResumeSessionRequest params) =>
+      unstableResumeSession(params);
 
   @override
-  Future<CloseSessionResponse> closeSession(
-    CloseSessionRequest params,
-  ) async {
+  Future<CloseSessionResponse> closeSession(CloseSessionRequest params) async {
     return _sendTypedRequest(
       agentMethods['sessionClose']!,
       params.toJson(),
@@ -1114,14 +1110,12 @@ abstract class Agent {
   ) => null;
 
   /// Resumes an existing session without replaying previous messages.
-  Future<ResumeSessionResponse>? resumeSession(
-    ResumeSessionRequest params,
-  ) => unstableResumeSession(params);
+  Future<ResumeSessionResponse>? resumeSession(ResumeSessionRequest params) =>
+      unstableResumeSession(params);
 
   /// Closes an existing session to allow the agent to free session memory.
-  Future<CloseSessionResponse>? closeSession(
-    CloseSessionRequest params,
-  ) => null;
+  Future<CloseSessionResponse>? closeSession(CloseSessionRequest params) =>
+      null;
 
   /// Sets the operational mode for a session.
   ///
