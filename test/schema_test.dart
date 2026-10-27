@@ -123,7 +123,7 @@ void main() {
       final setConfigOption = SetSessionConfigOptionRequest(
         sessionId: 'session-123',
         configId: 'mode',
-        value: 'code',
+        value: const SessionConfigSelectValue('code'),
       );
 
       final newSessionDecoded = NewSessionRequest.fromJson(
@@ -161,7 +161,10 @@ void main() {
       expect(setModeDecoded.modeId, equals('code'));
       expect(setModelDecoded.modelId, equals('gpt-4'));
       expect(setConfigOptionDecoded.configId, equals('mode'));
-      expect(setConfigOptionDecoded.value, equals('code'));
+      expect(
+        setConfigOptionDecoded.value,
+        equals(const SessionConfigSelectValue('code')),
+      );
     });
 
     test('Unstable session lifecycle responses round-trip', () {
@@ -217,7 +220,7 @@ void main() {
     });
 
     test('Session config option payloads round-trip', () {
-      final option = SessionConfigOption(
+      final option = SelectSessionConfigOption(
         id: 'mode',
         name: 'Session Mode',
         category: 'mode',
@@ -234,7 +237,7 @@ void main() {
         ),
       );
 
-      final groupedOption = SessionConfigOption(
+      final groupedOption = SelectSessionConfigOption(
         id: 'model',
         name: 'Model',
         category: 'model',
@@ -285,11 +288,15 @@ void main() {
 
       expect(setConfigResponseDecoded.configOptions.length, equals(2));
       expect(
-        setConfigResponseDecoded.configOptions.first.options,
+        (setConfigResponseDecoded.configOptions.first
+                as SelectSessionConfigOption)
+            .options,
         isA<UngroupedSessionConfigSelectOptions>(),
       );
       expect(
-        setConfigResponseDecoded.configOptions.last.options,
+        (setConfigResponseDecoded.configOptions.last
+                as SelectSessionConfigOption)
+            .options,
         isA<GroupedSessionConfigSelectOptions>(),
       );
       expect(newSessionResponseDecoded.configOptions?.first.id, equals('mode'));
@@ -351,7 +358,7 @@ void main() {
     });
 
     test('Session update variants round-trip and unknown fallback', () {
-      final option = SessionConfigOption(
+      final option = SelectSessionConfigOption(
         id: 'mode',
         name: 'Session Mode',
         currentValue: 'code',

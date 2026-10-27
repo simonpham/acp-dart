@@ -645,7 +645,10 @@ void main() {
       expect(response['id'], equals(99));
       expect(agent.lastSetConfigRequest, isNotNull);
       expect(agent.lastSetConfigRequest?.configId, equals('mode'));
-      expect(agent.lastSetConfigRequest?.value, equals('code'));
+      expect(
+        agent.lastSetConfigRequest?.value,
+        equals(const SessionConfigSelectValue('code')),
+      );
     });
 
     test('dispatches session/load requests to Agent', () async {
@@ -1194,7 +1197,7 @@ void main() {
           SetSessionConfigOptionRequest(
             sessionId: 'session-123',
             configId: 'mode',
-            value: 'code',
+            value: const SessionConfigSelectValue('code'),
           ),
         );
 
@@ -1224,7 +1227,14 @@ void main() {
 
         final response = await future;
         expect(response.configOptions.first.id, equals('mode'));
-        expect(response.configOptions.first.currentValue, equals('code'));
+        expect(
+          response.configOptions.first,
+          isA<SelectSessionConfigOption>().having(
+            (option) => option.currentValue,
+            'currentValue',
+            'code',
+          ),
+        );
       },
     );
 
@@ -1868,11 +1878,14 @@ class ConfigurableMockAgent extends MockAgent
     lastSetConfigRequest = params;
     return SetSessionConfigOptionResponse(
       configOptions: [
-        SessionConfigOption(
+        SelectSessionConfigOption(
           id: params.configId,
           name: 'Session Mode',
           category: 'mode',
-          currentValue: params.value,
+          currentValue: switch (params.value) {
+            SessionConfigSelectValue(:final value) => value,
+            SessionConfigBooleanValue() => 'code',
+          },
           options: UngroupedSessionConfigSelectOptions(
             options: [
               SessionConfigSelectOption(value: 'ask', name: 'Ask'),

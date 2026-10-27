@@ -605,13 +605,14 @@ class SetSessionModeRequest {
   Map<String, dynamic> toJson() => _$SetSessionModeRequestToJson(this);
 }
 
-@JsonSerializable()
 class SetSessionConfigOptionRequest {
-  @JsonKey(name: '_meta', includeIfNull: false)
   final Map<String, dynamic>? meta;
   final SessionId sessionId;
   final SessionConfigId configId;
-  final SessionConfigValueId value;
+
+  /// The value to set, sent flattened into the request: a select's value id,
+  /// or a boolean with `"type": "boolean"`.
+  final SessionConfigOptionValue value;
 
   SetSessionConfigOptionRequest({
     this.meta,
@@ -621,9 +622,78 @@ class SetSessionConfigOptionRequest {
   });
 
   factory SetSessionConfigOptionRequest.fromJson(Map<String, dynamic> json) =>
-      _$SetSessionConfigOptionRequestFromJson(json);
+      SetSessionConfigOptionRequest(
+        meta: json['_meta'] as Map<String, dynamic>?,
+        sessionId: json['sessionId'] as String,
+        configId: json['configId'] as String,
+        value: SessionConfigOptionValue.fromJson(json),
+      );
 
-  Map<String, dynamic> toJson() => _$SetSessionConfigOptionRequestToJson(this);
+  Map<String, dynamic> toJson() => {
+    if (meta != null) '_meta': meta,
+    'sessionId': sessionId,
+    'configId': configId,
+    ...value.toJson(),
+  };
+}
+
+/// A value for `session/set_config_option`.
+sealed class SessionConfigOptionValue {
+  const SessionConfigOptionValue();
+
+  factory SessionConfigOptionValue.fromJson(Map<String, dynamic> json) =>
+      switch (json) {
+        {'type': 'boolean', 'value': final bool value} =>
+          SessionConfigBooleanValue(value),
+        {'value': final String value} => SessionConfigSelectValue(value),
+        _ => throw ArgumentError.value(
+          json['value'],
+          'value',
+          'Expected a value id or a boolean',
+        ),
+      };
+
+  Map<String, dynamic> toJson();
+}
+
+/// The id of a select option's choice.
+class SessionConfigSelectValue extends SessionConfigOptionValue {
+  final SessionConfigValueId value;
+
+  const SessionConfigSelectValue(this.value);
+
+  @override
+  Map<String, dynamic> toJson() => {'value': value};
+
+  @override
+  bool operator ==(Object other) =>
+      other is SessionConfigSelectValue && other.value == value;
+
+  @override
+  int get hashCode => value.hashCode;
+
+  @override
+  String toString() => 'SessionConfigSelectValue($value)';
+}
+
+/// A boolean option's value.
+class SessionConfigBooleanValue extends SessionConfigOptionValue {
+  final bool value;
+
+  const SessionConfigBooleanValue(this.value);
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'boolean', 'value': value};
+
+  @override
+  bool operator ==(Object other) =>
+      other is SessionConfigBooleanValue && other.value == value;
+
+  @override
+  int get hashCode => value.hashCode;
+
+  @override
+  String toString() => 'SessionConfigBooleanValue($value)';
 }
 
 @JsonSerializable()
@@ -1440,35 +1510,182 @@ class SessionModelState {
   Map<String, dynamic> toJson() => _$SessionModelStateToJson(this);
 }
 
-@JsonSerializable()
-class SessionConfigOption {
-  @JsonKey(name: '_meta', includeIfNull: false)
+/// A session configuration option, told apart by its `type`.
+///
+/// An option of a type this library doesn't know, or one not shaped like its
+/// type, reads as an [UnknownSessionConfigOption] instead of failing the
+/// message it came in.
+sealed class SessionConfigOption {
   final Map<String, dynamic>? meta;
   final SessionConfigId id;
   final String name;
   final String? description;
   final String? category;
-  @JsonKey(defaultValue: 'select')
-  final String type;
-  final SessionConfigValueId currentValue;
-  @SessionConfigSelectOptionsConverter()
-  final SessionConfigSelectOptions options;
 
-  SessionConfigOption({
+  const SessionConfigOption({
     this.meta,
     required this.id,
     required this.name,
     this.description,
     this.category,
-    this.type = 'select',
+  });
+
+  factory SessionConfigOption.fromJson(Map<String, dynamic> json) =>
+      switch (json) {
+        {'id': String(), 'name': String()} => switch (json['type'] ??
+            'select') {
+          'select' => SelectSessionConfigOption._tryFromJson(json),
+          'boolean' => BooleanSessionConfigOption._tryFromJson(json),
+          _ => null,
+        },
+        _ => null,
+      } ??
+      UnknownSessionConfigOption.fromJson(json);
+
+  Map<String, dynamic> toJson();
+
+  Map<String, dynamic> _baseJson(String type) => {
+    if (meta != null) '_meta': meta,
+    'id': id,
+    'name': name,
+    if (description != null) 'description': description,
+    if (category != null) 'category': category,
+    'type': type,
+  };
+
+  static String? _optionalString(Object? value) => switch (value) {
+    final String text => text,
+    _ => null,
+  };
+
+  static Map<String, dynamic>? _optionalMap(Object? value) => switch (value) {
+    final Map<String, dynamic> map => map,
+    _ => null,
+  };
+}
+
+/// An option whose value is one of a list of choices.
+class SelectSessionConfigOption extends SessionConfigOption {
+  final SessionConfigValueId currentValue;
+  final SessionConfigSelectOptions options;
+
+  const SelectSessionConfigOption({
+    super.meta,
+    required super.id,
+    required super.name,
+    super.description,
+    super.category,
     required this.currentValue,
     required this.options,
   });
 
-  factory SessionConfigOption.fromJson(Map<String, dynamic> json) =>
-      _$SessionConfigOptionFromJson(json);
+  static SelectSessionConfigOption? _tryFromJson(Map<String, dynamic> json) {
+    if (json case {
+      'currentValue': final String currentValue,
+      'options': final List<dynamic> options,
+    }) {
+      final SessionConfigSelectOptions choices;
+      try {
+        choices = const SessionConfigSelectOptionsConverter().fromJson(options);
+      } on Object {
+        return null;
+      }
+      return SelectSessionConfigOption(
+        meta: SessionConfigOption._optionalMap(json['_meta']),
+        id: json['id'] as String,
+        name: json['name'] as String,
+        description: SessionConfigOption._optionalString(json['description']),
+        category: SessionConfigOption._optionalString(json['category']),
+        currentValue: currentValue,
+        options: choices,
+      );
+    }
+    return null;
+  }
 
-  Map<String, dynamic> toJson() => _$SessionConfigOptionToJson(this);
+  SelectSessionConfigOption copyWith({SessionConfigValueId? currentValue}) =>
+      SelectSessionConfigOption(
+        meta: meta,
+        id: id,
+        name: name,
+        description: description,
+        category: category,
+        currentValue: currentValue ?? this.currentValue,
+        options: options,
+      );
+
+  @override
+  Map<String, dynamic> toJson() => {
+    ..._baseJson('select'),
+    'currentValue': currentValue,
+    'options': const SessionConfigSelectOptionsConverter().toJson(options),
+  };
+}
+
+/// An option that is on or off.
+class BooleanSessionConfigOption extends SessionConfigOption {
+  final bool currentValue;
+
+  const BooleanSessionConfigOption({
+    super.meta,
+    required super.id,
+    required super.name,
+    super.description,
+    super.category,
+    required this.currentValue,
+  });
+
+  static BooleanSessionConfigOption? _tryFromJson(Map<String, dynamic> json) {
+    if (json case {'currentValue': final bool currentValue}) {
+      return BooleanSessionConfigOption(
+        meta: SessionConfigOption._optionalMap(json['_meta']),
+        id: json['id'] as String,
+        name: json['name'] as String,
+        description: SessionConfigOption._optionalString(json['description']),
+        category: SessionConfigOption._optionalString(json['category']),
+        currentValue: currentValue,
+      );
+    }
+    return null;
+  }
+
+  BooleanSessionConfigOption copyWith({bool? currentValue}) =>
+      BooleanSessionConfigOption(
+        meta: meta,
+        id: id,
+        name: name,
+        description: description,
+        category: category,
+        currentValue: currentValue ?? this.currentValue,
+      );
+
+  @override
+  Map<String, dynamic> toJson() => {
+    ..._baseJson('boolean'),
+    'currentValue': currentValue,
+  };
+}
+
+/// An option of a type this library doesn't know, or one not shaped like its
+/// type. [rawJson] keeps it as it came.
+class UnknownSessionConfigOption extends SessionConfigOption {
+  final Map<String, dynamic> rawJson;
+
+  UnknownSessionConfigOption.fromJson(this.rawJson)
+    : super(
+        id: SessionConfigOption._optionalString(rawJson['id']) ?? '',
+        name: SessionConfigOption._optionalString(rawJson['name']) ?? '',
+        description: SessionConfigOption._optionalString(
+          rawJson['description'],
+        ),
+        category: SessionConfigOption._optionalString(rawJson['category']),
+      );
+
+  @override
+  Map<String, dynamic> toJson() => rawJson;
+
+  @override
+  String toString() => 'UnknownSessionConfigOption(rawJson: $rawJson)';
 }
 
 abstract class SessionConfigSelectOptions {}

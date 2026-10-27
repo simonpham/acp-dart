@@ -362,24 +362,6 @@ Map<String, dynamic> _$SetSessionModeRequestToJson(
   'modeId': instance.modeId,
 };
 
-SetSessionConfigOptionRequest _$SetSessionConfigOptionRequestFromJson(
-  Map<String, dynamic> json,
-) => SetSessionConfigOptionRequest(
-  meta: json['_meta'] as Map<String, dynamic>?,
-  sessionId: json['sessionId'] as String,
-  configId: json['configId'] as String,
-  value: json['value'] as String,
-);
-
-Map<String, dynamic> _$SetSessionConfigOptionRequestToJson(
-  SetSessionConfigOptionRequest instance,
-) => <String, dynamic>{
-  '_meta': ?instance.meta,
-  'sessionId': instance.sessionId,
-  'configId': instance.configId,
-  'value': instance.value,
-};
-
 PromptRequest _$PromptRequestFromJson(Map<String, dynamic> json) =>
     PromptRequest(
       meta: json['_meta'] as Map<String, dynamic>?,
@@ -1020,35 +1002,6 @@ Map<String, dynamic> _$SessionModelStateToJson(SessionModelState instance) =>
       'availableModels': instance.availableModels,
       'currentModelId': instance.currentModelId,
     };
-
-SessionConfigOption _$SessionConfigOptionFromJson(Map<String, dynamic> json) =>
-    SessionConfigOption(
-      meta: json['_meta'] as Map<String, dynamic>?,
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String?,
-      category: json['category'] as String?,
-      type: json['type'] as String? ?? 'select',
-      currentValue: json['currentValue'] as String,
-      options: const SessionConfigSelectOptionsConverter().fromJson(
-        json['options'] as List,
-      ),
-    );
-
-Map<String, dynamic> _$SessionConfigOptionToJson(
-  SessionConfigOption instance,
-) => <String, dynamic>{
-  '_meta': ?instance.meta,
-  'id': instance.id,
-  'name': instance.name,
-  'description': instance.description,
-  'category': instance.category,
-  'type': instance.type,
-  'currentValue': instance.currentValue,
-  'options': const SessionConfigSelectOptionsConverter().toJson(
-    instance.options,
-  ),
-};
 
 UngroupedSessionConfigSelectOptions
 _$UngroupedSessionConfigSelectOptionsFromJson(Map<String, dynamic> json) =>
