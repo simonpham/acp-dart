@@ -183,6 +183,12 @@ class ClientCapabilities {
   final ElicitationCapabilities? elicitation;
   final AuthCapabilities? auth;
 
+  /// Present when the client shows an agent's subagents as sessions of
+  /// their own (the ACP subagents draft): `subagent_update` and
+  /// `session_message` updates, child sessions' own traffic.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final SubagentsCapability? subagents;
+
   ClientCapabilities({
     this.meta,
     this.fs,
@@ -190,12 +196,42 @@ class ClientCapabilities {
     this.session,
     this.elicitation,
     this.auth,
+    this.subagents,
   });
 
-  factory ClientCapabilities.fromJson(Map<String, dynamic> json) =>
-      _$ClientCapabilitiesFromJson(json);
+  factory ClientCapabilities.fromJson(Map<String, dynamic> json) {
+    final parsed = _$ClientCapabilitiesFromJson(json);
+    return switch (json['subagents']) {
+      final Map<String, dynamic> subagents => ClientCapabilities(
+        meta: parsed.meta,
+        fs: parsed.fs,
+        terminal: parsed.terminal,
+        session: parsed.session,
+        elicitation: parsed.elicitation,
+        auth: parsed.auth,
+        subagents: SubagentsCapability.fromJson(subagents),
+      ),
+      _ => parsed,
+    };
+  }
 
-  Map<String, dynamic> toJson() => _$ClientCapabilitiesToJson(this);
+  Map<String, dynamic> toJson() => {
+    ..._$ClientCapabilitiesToJson(this),
+    'subagents': ?subagents?.toJson(),
+  };
+}
+
+/// The client's subagents capability, an empty object unless it carries
+/// `_meta`.
+class SubagentsCapability {
+  final Map<String, dynamic>? meta;
+
+  const SubagentsCapability({this.meta});
+
+  factory SubagentsCapability.fromJson(Map<String, dynamic> json) =>
+      SubagentsCapability(meta: json['_meta'] as Map<String, dynamic>?);
+
+  Map<String, dynamic> toJson() => {'_meta': ?meta};
 }
 
 @JsonSerializable()
@@ -2740,6 +2776,177 @@ class SessionInfoUpdate extends SessionUpdate {
       _$SessionInfoUpdateFromJson(json);
 
   Map<String, dynamic> toJson() => _$SessionInfoUpdateToJson(this);
+}
+
+/// What a subagent can be asked to do, from its `subagent_update`.
+class SubagentCapabilities {
+  final Map<String, dynamic>? meta;
+
+  /// Whether `session/cancel` with the subagent's session id stops it.
+  final bool cancel;
+
+  const SubagentCapabilities({this.meta, this.cancel = false});
+
+  factory SubagentCapabilities.fromJson(Map<String, dynamic> json) =>
+      SubagentCapabilities(
+        meta: json['_meta'] as Map<String, dynamic>?,
+        cancel: json['cancel'] is Map,
+      );
+
+  Map<String, dynamic> toJson() => {
+    '_meta': ?meta,
+    if (cancel) 'cancel': <String, dynamic>{},
+  };
+}
+
+/// Why a subagent's work failed.
+class SubagentError {
+  final int? code;
+  final String message;
+
+  const SubagentError({this.code, required this.message});
+
+  factory SubagentError.fromJson(Map<String, dynamic> json) => SubagentError(
+    code: json['code'] as int?,
+    message: json['message'] as String? ?? '',
+  );
+
+  Map<String, dynamic> toJson() => {'code': ?code, 'message': message};
+}
+
+/// Where a subagent's work is: `running`, `requires_action` (it waits on
+/// the user), `idle` with why it stopped (`end_turn`, `cancelled`,
+/// `error`, or none), or `unknown` (contact lost).
+class SubagentState {
+  final Map<String, dynamic>? meta;
+  final String state;
+  final String? stopReason;
+  final SubagentError? error;
+
+  const SubagentState({
+    this.meta,
+    required this.state,
+    this.stopReason,
+    this.error,
+  });
+
+  factory SubagentState.fromJson(Map<String, dynamic> json) => SubagentState(
+    meta: json['_meta'] as Map<String, dynamic>?,
+    state: json['state'] as String? ?? 'unknown',
+    stopReason: json['stopReason'] as String?,
+    error: switch (json['error']) {
+      final Map<String, dynamic> error => SubagentError.fromJson(error),
+      _ => null,
+    },
+  );
+
+  Map<String, dynamic> toJson() => {
+    '_meta': ?meta,
+    'state': state,
+    'stopReason': ?stopReason,
+    'error': ?error?.toJson(),
+  };
+}
+
+/// A subagent of the session the update arrives on: announced with its
+/// title, description and capabilities, then each change of its state.
+class SubagentUpdate extends SessionUpdate {
+  final Map<String, dynamic>? meta;
+
+  /// The subagent's own session id.
+  final String sessionId;
+  final String? title;
+  final String? description;
+  final SubagentCapabilities? capabilities;
+  final SubagentState? state;
+
+  SubagentUpdate({
+    this.meta,
+    required this.sessionId,
+    this.title,
+    this.description,
+    this.capabilities,
+    this.state,
+  });
+
+  factory SubagentUpdate.fromJson(Map<String, dynamic> json) => SubagentUpdate(
+    meta: json['_meta'] as Map<String, dynamic>?,
+    sessionId: json['sessionId'] as String? ?? '',
+    title: json['title'] as String?,
+    description: json['description'] as String?,
+    capabilities: switch (json['capabilities']) {
+      final Map<String, dynamic> capabilities => SubagentCapabilities.fromJson(
+        capabilities,
+      ),
+      _ => null,
+    },
+    state: switch (json['state']) {
+      final Map<String, dynamic> state => SubagentState.fromJson(state),
+      _ => null,
+    },
+  );
+
+  Map<String, dynamic> toJson() => {
+    '_meta': ?meta,
+    'sessionId': sessionId,
+    'title': ?title,
+    'description': ?description,
+    'capabilities': ?capabilities?.toJson(),
+    'state': ?state?.toJson(),
+  };
+}
+
+/// A message between two sessions, such as a parent's prompt to its
+/// subagent or the subagent's reply, reported on each side.
+class SessionMessageUpdate extends SessionUpdate {
+  final Map<String, dynamic>? meta;
+  final String messageId;
+  final String senderSessionId;
+  final String recipientSessionId;
+
+  /// The same message's id on the sender's side, as the recipient reports.
+  final String? senderMessageId;
+
+  /// The same message's id on the recipient's side, as the sender reports.
+  final String? recipientMessageId;
+  final List<ContentBlock> content;
+
+  SessionMessageUpdate({
+    this.meta,
+    required this.messageId,
+    required this.senderSessionId,
+    required this.recipientSessionId,
+    this.senderMessageId,
+    this.recipientMessageId,
+    this.content = const [],
+  });
+
+  factory SessionMessageUpdate.fromJson(Map<String, dynamic> json) =>
+      SessionMessageUpdate(
+        meta: json['_meta'] as Map<String, dynamic>?,
+        messageId: json['messageId'] as String? ?? '',
+        senderSessionId: json['senderSessionId'] as String? ?? '',
+        recipientSessionId: json['recipientSessionId'] as String? ?? '',
+        senderMessageId: json['senderMessageId'] as String?,
+        recipientMessageId: json['recipientMessageId'] as String?,
+        content: [
+          for (final block in (json['content'] as List?) ?? const [])
+            if (block is Map<String, dynamic>)
+              const ContentBlockConverter().fromJson(block),
+        ],
+      );
+
+  Map<String, dynamic> toJson() => {
+    '_meta': ?meta,
+    'messageId': messageId,
+    'senderSessionId': senderSessionId,
+    'recipientSessionId': recipientSessionId,
+    'senderMessageId': ?senderMessageId,
+    'recipientMessageId': ?recipientMessageId,
+    'content': [
+      for (final block in content) const ContentBlockConverter().toJson(block),
+    ],
+  };
 }
 
 @JsonSerializable()

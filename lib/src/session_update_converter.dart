@@ -35,6 +35,10 @@ class SessionUpdateConverter
         return SessionInfoUpdate.fromJson(data);
       case 'usage_update':
         return UsageUpdate.fromJson(data);
+      case 'subagent_update':
+        return SubagentUpdate.fromJson(data);
+      case 'session_message':
+        return SessionMessageUpdate.fromJson(data);
 
       default:
         return UnknownSessionUpdate(rawJson: json);
@@ -72,6 +76,12 @@ class SessionUpdateConverter
     }
     if (object is SessionInfoUpdate) {
       return {'sessionUpdate': 'session_info_update', ...object.toJson()};
+    }
+    if (object is SubagentUpdate) {
+      return {'sessionUpdate': 'subagent_update', ...object.toJson()};
+    }
+    if (object is SessionMessageUpdate) {
+      return {'sessionUpdate': 'session_message', ...object.toJson()};
     }
     if (object is UsageUpdate) {
       return {'sessionUpdate': 'usage_update', ...object.toJson()};
