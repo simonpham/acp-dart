@@ -482,7 +482,9 @@ ResourceContentBlock _$ResourceContentBlockFromJson(
   annotations: json['annotations'] == null
       ? null
       : Annotations.fromJson(json['annotations'] as Map<String, dynamic>),
-  resource: EmbeddedResource.fromJson(json['resource'] as Map<String, dynamic>),
+  resource: const EmbeddedResourceResourceConverter().fromJson(
+    json['resource'] as Map<String, dynamic>,
+  ),
   type: json['type'] as String? ?? 'resource',
 );
 
@@ -491,7 +493,9 @@ Map<String, dynamic> _$ResourceContentBlockToJson(
 ) => <String, dynamic>{
   '_meta': ?instance.meta,
   'annotations': instance.annotations,
-  'resource': instance.resource,
+  'resource': const EmbeddedResourceResourceConverter().toJson(
+    instance.resource,
+  ),
   'type': instance.type,
 };
 

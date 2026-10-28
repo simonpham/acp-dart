@@ -950,12 +950,16 @@ class ResourceLinkContentBlock extends ContentBlock {
   );
 }
 
+/// A resource embedded in the content: the block carries the resource's
+/// contents directly, `{type: "resource", resource: {uri, text}}`, as
+/// [EmbeddedResource] does.
 @JsonSerializable()
 class ResourceContentBlock extends ContentBlock {
   @JsonKey(name: '_meta', includeIfNull: false)
   final Map<String, dynamic>? meta;
   final Annotations? annotations;
-  final EmbeddedResource resource;
+  @EmbeddedResourceResourceConverter()
+  final EmbeddedResourceResource resource;
   @JsonKey(name: 'type')
   final String type;
 

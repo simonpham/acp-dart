@@ -316,22 +316,32 @@ void main() {
             uri: 'file:///workspace/README.md',
           ),
           ResourceContentBlock(
-            resource: EmbeddedResource(
-              resource: TextResourceContents(
-                text: '# Notes',
-                uri: 'memory://notes',
-              ),
+            resource: TextResourceContents(
+              text: '# Notes',
+              uri: 'memory://notes',
             ),
           ),
         ],
       );
 
-      final decoded = PromptRequest.fromJson(
-        jsonDecode(jsonEncode(prompt.toJson())) as Map<String, dynamic>,
-      );
+      final json =
+          jsonDecode(jsonEncode(prompt.toJson())) as Map<String, dynamic>;
+      final decoded = PromptRequest.fromJson(json);
 
       expect(decoded.sessionId, equals('session-123'));
       expect(decoded.prompt.length, equals(3));
+      // The block carries the resource's contents, not another wrapper.
+      expect((json['prompt'] as List)[2], {
+        'annotations': null,
+        'resource': {
+          'mimeType': null,
+          'text': '# Notes',
+          'uri': 'memory://notes',
+        },
+        'type': 'resource',
+      });
+      final embedded = decoded.prompt[2] as ResourceContentBlock;
+      expect((embedded.resource as TextResourceContents).text, '# Notes');
     });
 
     test('PromptResponse usage round-trips', () {
