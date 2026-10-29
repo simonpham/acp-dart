@@ -3005,6 +3005,10 @@ class CloseSessionResponse {
   Map<String, dynamic> toJson() => _$CloseSessionResponseToJson(this);
 }
 
+/// An agent asking the user for input: a form ([schema]) or a URL to open.
+///
+/// On the wire the question is `message` and the form `requestedSchema`, as
+/// in MCP; an earlier draft's `schema` is still read.
 @JsonSerializable()
 class CreateElicitationRequest {
   @JsonKey(name: '_meta', includeIfNull: false)
@@ -3013,10 +3017,19 @@ class CreateElicitationRequest {
   final String? scope;
   final String? sessionId;
   final RequestId? requestId;
+
+  /// The tool call the request belongs to, when it comes from one.
+  @JsonKey(includeIfNull: false)
+  final String? toolCallId;
   final String? title;
   final String? description;
+
+  /// What the agent asks, shown above the form.
+  @JsonKey(includeIfNull: false)
+  final String? message;
   @JsonKey(defaultValue: 'form')
   final String mode;
+  @JsonKey(name: 'requestedSchema', readValue: _readRequestedSchema)
   final ElicitationSchema? schema;
   final String? url;
 
@@ -3026,12 +3039,17 @@ class CreateElicitationRequest {
     this.scope,
     this.sessionId,
     this.requestId,
+    this.toolCallId,
     this.title,
     this.description,
+    this.message,
     this.mode = 'form',
     this.schema,
     this.url,
   });
+
+  static Object? _readRequestedSchema(Map<dynamic, dynamic> json, String key) =>
+      json[key] ?? json['schema'];
 
   factory CreateElicitationRequest.fromJson(Map<String, dynamic> json) =>
       _$CreateElicitationRequestFromJson(json);
@@ -3060,7 +3078,7 @@ class ElicitationSchema {
   Map<String, dynamic> toJson() => _$ElicitationSchemaToJson(this);
 }
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class ElicitationPropertySchema {
   final String type;
   final String? title;
@@ -3069,7 +3087,23 @@ class ElicitationPropertySchema {
   final dynamic defaultValue;
   @JsonKey(name: 'enum')
   final List<dynamic>? enumValues;
+
+  /// Titles for [enumValues], in the same order (MCP's legacy form).
+  final List<String>? enumNames;
+
+  /// A single choice among titled options: `{const, title, description}`.
+  final List<ElicitationChoice>? oneOf;
   final Map<String, dynamic>? items;
+
+  /// For a string: `email`, `uri`, `date` or `date-time`.
+  final String? format;
+  final int? minLength;
+  final int? maxLength;
+  final String? pattern;
+  final num? minimum;
+  final num? maximum;
+  final int? minItems;
+  final int? maxItems;
 
   ElicitationPropertySchema({
     required this.type,
@@ -3077,13 +3111,89 @@ class ElicitationPropertySchema {
     this.description,
     this.defaultValue,
     this.enumValues,
+    this.enumNames,
+    this.oneOf,
     this.items,
+    this.format,
+    this.minLength,
+    this.maxLength,
+    this.pattern,
+    this.minimum,
+    this.maximum,
+    this.minItems,
+    this.maxItems,
   });
+
+  /// The options of a single choice: titled ([oneOf]), or [enumValues]
+  /// titled by [enumNames] or by themselves. Empty for a free value.
+  List<ElicitationChoice> get choices {
+    if (oneOf case final options? when options.isNotEmpty) return options;
+    return _enumChoices(enumValues, enumNames);
+  }
+
+  /// The options of a multiple choice ([type] `array`): its items' titled
+  /// `anyOf` or `oneOf`, or their `enum`. Empty when the items are free.
+  List<ElicitationChoice> get itemChoices {
+    final items = this.items;
+    if (items == null) return const [];
+    for (final key in const ['anyOf', 'oneOf']) {
+      if (items[key] case final List options when options.isNotEmpty) {
+        return [
+          for (final option in options)
+            if (option is Map<String, dynamic>)
+              ElicitationChoice.fromJson(option),
+        ];
+      }
+    }
+    return _enumChoices(
+      switch (items['enum']) {
+        final List values => values,
+        _ => null,
+      },
+      switch (items['enumNames']) {
+        final List names => [...names.whereType<String>()],
+        _ => null,
+      },
+    );
+  }
+
+  static List<ElicitationChoice> _enumChoices(
+    List<dynamic>? values,
+    List<String>? names,
+  ) => [
+    for (final (index, value) in (values ?? const []).indexed)
+      ElicitationChoice(
+        value: value,
+        title: switch (names) {
+          final names? when index < names.length => names[index],
+          _ => null,
+        },
+      ),
+  ];
 
   factory ElicitationPropertySchema.fromJson(Map<String, dynamic> json) =>
       _$ElicitationPropertySchemaFromJson(json);
 
   Map<String, dynamic> toJson() => _$ElicitationPropertySchemaToJson(this);
+}
+
+/// One option of a choice: the [value] sent back, shown as [title].
+@JsonSerializable(includeIfNull: false)
+class ElicitationChoice {
+  @JsonKey(name: 'const')
+  final dynamic value;
+  final String? title;
+  final String? description;
+
+  ElicitationChoice({required this.value, this.title, this.description});
+
+  /// What the user sees: the title, else the value itself.
+  String get label => title ?? '$value';
+
+  factory ElicitationChoice.fromJson(Map<String, dynamic> json) =>
+      _$ElicitationChoiceFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ElicitationChoiceToJson(this);
 }
 
 @JsonSerializable()

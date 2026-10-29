@@ -1931,12 +1931,19 @@ CreateElicitationRequest _$CreateElicitationRequestFromJson(
   scope: json['scope'] as String?,
   sessionId: json['sessionId'] as String?,
   requestId: json['requestId'],
+  toolCallId: json['toolCallId'] as String?,
   title: json['title'] as String?,
   description: json['description'] as String?,
+  message: json['message'] as String?,
   mode: json['mode'] as String? ?? 'form',
-  schema: json['schema'] == null
+  schema:
+      CreateElicitationRequest._readRequestedSchema(json, 'requestedSchema') ==
+          null
       ? null
-      : ElicitationSchema.fromJson(json['schema'] as Map<String, dynamic>),
+      : ElicitationSchema.fromJson(
+          CreateElicitationRequest._readRequestedSchema(json, 'requestedSchema')
+              as Map<String, dynamic>,
+        ),
   url: json['url'] as String?,
 );
 
@@ -1948,10 +1955,12 @@ Map<String, dynamic> _$CreateElicitationRequestToJson(
   'scope': instance.scope,
   'sessionId': instance.sessionId,
   'requestId': instance.requestId,
+  'toolCallId': ?instance.toolCallId,
   'title': instance.title,
   'description': instance.description,
+  'message': ?instance.message,
   'mode': instance.mode,
-  'schema': instance.schema,
+  'requestedSchema': instance.schema,
   'url': instance.url,
 };
 
@@ -1988,19 +1997,57 @@ ElicitationPropertySchema _$ElicitationPropertySchemaFromJson(
   description: json['description'] as String?,
   defaultValue: json['default'],
   enumValues: json['enum'] as List<dynamic>?,
+  enumNames: (json['enumNames'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  oneOf: (json['oneOf'] as List<dynamic>?)
+      ?.map((e) => ElicitationChoice.fromJson(e as Map<String, dynamic>))
+      .toList(),
   items: json['items'] as Map<String, dynamic>?,
+  format: json['format'] as String?,
+  minLength: (json['minLength'] as num?)?.toInt(),
+  maxLength: (json['maxLength'] as num?)?.toInt(),
+  pattern: json['pattern'] as String?,
+  minimum: json['minimum'] as num?,
+  maximum: json['maximum'] as num?,
+  minItems: (json['minItems'] as num?)?.toInt(),
+  maxItems: (json['maxItems'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$ElicitationPropertySchemaToJson(
   ElicitationPropertySchema instance,
 ) => <String, dynamic>{
   'type': instance.type,
-  'title': instance.title,
-  'description': instance.description,
-  'default': instance.defaultValue,
-  'enum': instance.enumValues,
-  'items': instance.items,
+  'title': ?instance.title,
+  'description': ?instance.description,
+  'default': ?instance.defaultValue,
+  'enum': ?instance.enumValues,
+  'enumNames': ?instance.enumNames,
+  'oneOf': ?instance.oneOf,
+  'items': ?instance.items,
+  'format': ?instance.format,
+  'minLength': ?instance.minLength,
+  'maxLength': ?instance.maxLength,
+  'pattern': ?instance.pattern,
+  'minimum': ?instance.minimum,
+  'maximum': ?instance.maximum,
+  'minItems': ?instance.minItems,
+  'maxItems': ?instance.maxItems,
 };
+
+ElicitationChoice _$ElicitationChoiceFromJson(Map<String, dynamic> json) =>
+    ElicitationChoice(
+      value: json['const'],
+      title: json['title'] as String?,
+      description: json['description'] as String?,
+    );
+
+Map<String, dynamic> _$ElicitationChoiceToJson(ElicitationChoice instance) =>
+    <String, dynamic>{
+      'const': ?instance.value,
+      'title': ?instance.title,
+      'description': ?instance.description,
+    };
 
 CreateElicitationResponse _$CreateElicitationResponseFromJson(
   Map<String, dynamic> json,
