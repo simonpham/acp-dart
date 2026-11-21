@@ -176,6 +176,34 @@ void main() {
       });
     }
 
+    test('a stream error alone leaves the connection working', () async {
+      final readableController = StreamController<Map<String, dynamic>>();
+      final writableController = StreamController<Map<String, dynamic>>();
+      final sent = <Map<String, dynamic>>[];
+      writableController.stream.listen(sent.add);
+      final connection = Connection(
+        (method, params) async => null,
+        (method, params) async {},
+        AcpStream(
+          readable: readableController.stream,
+          writable: writableController.sink,
+        ),
+      );
+
+      final pending = connection.sendRequest<dynamic>('session/load');
+      await Future<void>.delayed(Duration.zero);
+      readableController.addError(const FormatException('not UTF-8'));
+      await Future<void>.delayed(Duration.zero);
+      readableController.add({
+        'jsonrpc': '2.0',
+        'id': sent.single['id'],
+        'result': {'ok': true},
+      });
+
+      expect(await pending.timeout(const Duration(seconds: 1)), {'ok': true});
+      await readableController.close();
+    });
+
     test('sendRequest sends correct message and receives response', () async {
       final readableController = StreamController<Map<String, dynamic>>();
       final writableController = StreamController<Map<String, dynamic>>();

@@ -192,12 +192,12 @@ class Connection {
   void _receive() {
     _stream.readable.listen(
       _processMessage,
+      // One bad chunk, such as bytes that aren't UTF-8, is not the end of
+      // the agent: only the stream closing is.
       onError: (error) {
         print('Error receiving message: $error');
-        _close();
       },
       onDone: _close,
-      cancelOnError: true,
     );
   }
 
