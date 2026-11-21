@@ -123,13 +123,20 @@ class Connection {
   final NotificationHandler _notificationHandler;
   final AcpStream _stream;
   Future<void> _writeQueue = Future.value();
+  bool _closed = false;
 
   Connection(this._requestHandler, this._notificationHandler, this._stream) {
     _receive();
   }
 
   /// Sends a request and returns a future that completes with the response
+  ///
+  /// Once the stream has closed, the future completes with an error, as do
+  /// the requests still waiting for a response when it closes.
   Future<T> sendRequest<T>(String method, [dynamic params]) {
+    if (_closed) {
+      return Future.error(_connectionClosedError());
+    }
     final id = _nextRequestId++;
     final completer = Completer<T>();
     _pendingResponses[id] = _PendingResponse(
@@ -187,12 +194,29 @@ class Connection {
       _processMessage,
       onError: (error) {
         print('Error receiving message: $error');
+        _close();
       },
-      onDone: () {
-        // Stream closed
-      },
+      onDone: _close,
+      cancelOnError: true,
     );
   }
+
+  /// Rejects every request still waiting, since no response can arrive.
+  void _close() {
+    if (_closed) {
+      return;
+    }
+    _closed = true;
+    final pending = [..._pendingResponses.values];
+    _pendingResponses.clear();
+    for (final response in pending) {
+      response.reject(_connectionClosedError());
+    }
+  }
+
+  Map<String, dynamic> _connectionClosedError() => RequestError.internalError({
+    'message': 'The connection closed',
+  }).toErrorResponse().toJson();
 
   /// Processes an incoming message
   void _processMessage(Map<String, dynamic> message) {

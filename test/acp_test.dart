@@ -128,6 +128,54 @@ void main() {
   });
 
   group('Connection', () {
+    for (final (how, close) in [
+      (
+        'closes',
+        (StreamController<Map<String, dynamic>> readable) => readable.close(),
+      ),
+      (
+        'fails',
+        (StreamController<Map<String, dynamic>> readable) {
+          readable.addError(StateError('broken pipe'));
+          return readable.close();
+        },
+      ),
+    ]) {
+      test('rejects pending requests when the stream $how', () async {
+        final readableController = StreamController<Map<String, dynamic>>();
+        final writableController = StreamController<Map<String, dynamic>>();
+        writableController.stream.listen((_) {});
+        final connection = Connection(
+          (method, params) async => null,
+          (method, params) async {},
+          AcpStream(
+            readable: readableController.stream,
+            writable: writableController.sink,
+          ),
+        );
+
+        final pending = connection.sendRequest<dynamic>('session/load');
+        await Future<void>.delayed(Duration.zero);
+        await close(readableController);
+
+        await expectLater(
+          pending.timeout(const Duration(seconds: 1)),
+          throwsA(
+            isA<Map<String, dynamic>>().having(
+              (error) => error['data']['message'],
+              'message',
+              'The connection closed',
+            ),
+          ),
+        );
+        await expectLater(
+          connection.sendRequest<dynamic>('session/prompt'),
+          throwsA(isA<Map<String, dynamic>>()),
+          reason: 'nothing answers after the stream is gone',
+        );
+      });
+    }
+
     test('sendRequest sends correct message and receives response', () async {
       final readableController = StreamController<Map<String, dynamic>>();
       final writableController = StreamController<Map<String, dynamic>>();
